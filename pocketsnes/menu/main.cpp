@@ -12,6 +12,7 @@
 #include "gfx.h"
 #include "soundux.h"
 #include "snapshot.h"
+#include "savestateio.h"
 
 #define SNES_SCREEN_WIDTH  256
 #define SNES_SCREEN_HEIGHT 192
@@ -23,10 +24,18 @@ static char mRomName[SAL_MAX_PATH]={""};
 static char mSystemDir[SAL_MAX_PATH]=SNES_SYSTEM_DIR;
 static u32 mLastRate=0;
 
-static s8 mFpsDisplay[40]={""};
+static s8 mFpsDisplay[16]={""};
+static s8 mVolumeDisplay[16]={""};
+static s8 mQuickStateDisplay[16]={""};
 static u32 mFps=0;
 static u32 mLastTimer=0;
 static u32 mEnterMenu=0;
+static u32 mLoadRequested=0;
+static u32 mSaveRequested=0;
+static u32 mQuickStateTimer=0;
+static u32 mVolumeTimer=0;
+static u32 mVolumeDisplayTimer=0;
+static u32 mInMenu=0;
 
 static int S9xCompareSDD1IndexEntries (const void *p1, const void *p2)
 {
@@ -96,12 +105,6 @@ char *osd_GetPackDir(void)
       return ".";
 }
 
-const char *S9xGetSnapshotDirectory(void)
-{
-	S9xMessage (0,0,"get snapshot dir");
-	return ".";
-}
-
 void S9xLoadSDD1Data (void)
 {
 
@@ -111,6 +114,7 @@ void S9xLoadSDD1Data (void)
 
 bool8_32 S9xInitUpdate ()
 {
+	if(mInMenu) return (TRUE);
 	if(mMenuOptions.fullScreen)	GFX.Screen = (uint8 *) sal_VideoGetBuffer();
 	else				GFX.Screen = (uint8 *) sal_VideoGetBuffer()+(320-SNES_WIDTH)+((240-SNES_HEIGHT)*320);
 
@@ -119,6 +123,8 @@ bool8_32 S9xInitUpdate ()
 
 bool8_32 S9xDeinitUpdate (int Width, int Height, bool8_32)
 {
+	if(mInMenu) return TRUE;
+
 	u32 newTimer;
 	if (mMenuOptions.showFps) 
 	{
@@ -135,29 +141,81 @@ bool8_32 S9xDeinitUpdate (int Width, int Height, bool8_32)
 		sal_VideoPrint(0,0,mFpsDisplay,SAL_RGB(31,31,31));
 	}
 
+	if(mVolumeDisplayTimer>0)
+	{
+		sal_VideoDrawRect(100,0,8*8,8,SAL_RGB(0,0,0));
+		sal_VideoPrint(100,0,mVolumeDisplay,SAL_RGB(31,31,31));
+	}
+
+	if(mQuickStateTimer>0)
+	{
+		sal_VideoDrawRect(200,0,8*8,8,SAL_RGB(0,0,0));
+		sal_VideoPrint(200,0,mQuickStateDisplay,SAL_RGB(31,31,31));
+	}
+
 	sal_VideoFlip(0);
 }
 
 const char *S9xGetFilename (const char *ex)
 {
-      	static char filename [SAL_MAX_PATH];
       	char dir [SAL_MAX_PATH];
       	char fname [SAL_MAX_PATH];
       	char ext [SAL_MAX_PATH];
 
 	sal_DirectorySplitFilename(Memory.ROMFilename, dir, fname, ext);
-      	strcpy (filename, S9xGetSnapshotDirectory ());
-	sal_DirectoryCombine(filename,fname);
-      	strcat (filename, ex);
+	sal_DirectoryCombine(dir,fname);
+      	strcat (dir, ex);
 
-      	return (filename);
+      	return (dir);
 }
 
+static u8 *mTempState=NULL;
+static
+void LoadStateMem()
+{
+	SetSaveStateIoModeMemory(&mTempState);
+	S9xUnfreezeGame("blah");
+}
 
+static 
+void SaveStateMem()
+{
+	SetSaveStateIoModeMemory(&mTempState);
+
+	S9xFreezeGame("blah");
+}
+
+void HandleQuickStateRequests()
+{
+	if(mVolumeTimer>0) mVolumeTimer--;
+	if(mVolumeDisplayTimer>0) mVolumeDisplayTimer--;
+
+	if(mQuickStateTimer>0)
+	{
+		mQuickStateTimer--;
+		return;
+	}
+
+	if(mSaveRequested)
+	{
+		mSaveRequested=0;
+		SaveStateMem();
+		mQuickStateTimer = 60;
+	}
+
+	if(mLoadRequested)
+	{
+		mLoadRequested=0;
+		LoadStateMem();
+		mQuickStateTimer = 60;
+	}
+
+	
+}
 uint32 S9xReadJoypad (int which1)
 {
 	uint32 val=0x80000000;
-
+	if (mInMenu) return val;
 	if (which1 != 0) return val;
 
 	u32 joy = sal_InputPoll();
@@ -165,6 +223,55 @@ uint32 S9xReadJoypad (int which1)
 	if ((joy & SAL_INPUT_SELECT)&&(joy & SAL_INPUT_START))	
 	{
 		mEnterMenu = 1;		
+		return val;
+	}
+
+	
+	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_LEFT))
+	{
+		if (mQuickStateTimer==0)
+		{
+			mSaveRequested=1;
+			strcpy(mQuickStateDisplay,"Saved!");
+		}
+		return val;
+	}
+
+	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_RIGHT))
+	{
+		if (mQuickStateTimer==0)
+		{
+			mLoadRequested=1;
+			strcpy(mQuickStateDisplay,"Loaded!");
+		}
+		return val;
+	}
+
+	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_UP))
+	{
+		if(mVolumeTimer==0)
+		{
+			mMenuOptions.volume++;
+			if(mMenuOptions.volume>31) mMenuOptions.volume=31;
+			sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
+			mVolumeTimer=5;
+			mVolumeDisplayTimer=60;
+			sprintf(mVolumeDisplay,"Vol: %d",mMenuOptions.volume);
+		}
+		return val;
+	}
+
+	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_DOWN))
+	{
+		if(mVolumeTimer==0)
+		{
+			mMenuOptions.volume--;
+			if(mMenuOptions.volume>31) mMenuOptions.volume=0;
+			sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
+			mVolumeTimer=5;
+			mVolumeDisplayTimer=60;
+			sprintf(mVolumeDisplay,"Vol: %d",mMenuOptions.volume);
+		}
 		return val;
 	}
 
@@ -181,9 +288,7 @@ uint32 S9xReadJoypad (int which1)
 	if (joy & SAL_INPUT_SELECT) 	val |= SNES_SELECT_MASK;
 	if (joy & SAL_INPUT_L) 		val |= SNES_TL_MASK;
 	if (joy & SAL_INPUT_R) 		val |= SNES_TR_MASK;
-	
-	
-      
+
 	return val;
 }
 
@@ -226,16 +331,22 @@ const char *S9xBasename (const char *f)
 
 
 
-void S9xSaveSRAM (void)
+void S9xSaveSRAM (int showWarning)
 {
-	char path[SAL_MAX_PATH];
-	
 	if (CPU.SRAMModified)
 	{
-		strcpy(path,mSystemDir);
-		sal_DirectoryCombine(path,(s8*)S9xGetFilename (".srm"));
-		Memory.SaveSRAM (path);
-		sync();
+		if(Memory.SaveSRAM ((s8*)S9xGetFilename (".srm")))
+		{
+			sync();
+		}
+		else
+		{
+			MenuMessageBox("Saving SRAM...Failed","SRAM Not Saved!","",MENU_MESSAGE_BOX_MODE_PAUSE);
+		}
+	}
+	else if(showWarning)
+	{
+		MenuMessageBox("Saving SRAM...Ignored!","No changes have been made to SRAM","So there is nothing to save!",MENU_MESSAGE_BOX_MODE_MSG);
 	}
 }
 
@@ -258,11 +369,7 @@ void S9xAutoSaveSRAM (void)
 
 void S9xLoadSRAM (void)
 {
-	char path[SAL_MAX_PATH];
-
-	strcpy(path,mSystemDir);
-	sal_DirectoryCombine(path,(s8*)S9xGetFilename (".srm"));
-	Memory.LoadSRAM (path);
+	Memory.LoadSRAM ((s8*)S9xGetFilename (".srm"));
 }
 
 static
@@ -311,6 +418,8 @@ int RunSound()
 				//Run SNES for one glorious frame
 		    		S9xMainLoop ();
 				S9xMixSamples((uint8*)sal_AudioGetBuffer(doneLast), sal_AudioGetSampleCount());
+				HandleQuickStateRequests();
+				
 			}
 			if (done==aim) break; // Up to date now
 			if (mEnterMenu) break;
@@ -363,6 +472,7 @@ int RunNoSound()
 		
 				//Run SNES for one glorious frame
 		    		S9xMainLoop ();
+				HandleQuickStateRequests();
 			}
 			if (done==aim) break; // Up to date now
 			if (mEnterMenu) break;
@@ -537,276 +647,6 @@ void _splitpath (const char *path, char *drive, char *dir, char *fname,
 	}
 } 
 
-// save state file I/O
-int  (*statef_open)(const char *fname, const char *mode);
-int  (*statef_read)(void *p, int l);
-int  (*statef_write)(void *p, int l);
-void (*statef_close)();
-static FILE  *state_file = 0;
-static char state_filename[SAL_MAX_PATH];
-static char *state_mem = NULL;
-static int state_mem_pos = 0;
-static int state_mem_size=0;
-static int state_mode = 0;
-static int open_mode = 0;
-
-int check_zip(char *filename)
-{
-    uint8 buf[2];
-    FILE *fd = NULL;
-    fd = (FILE*)fopen(filename, "rb");
-    if(!fd) return (0);
-    fread(buf, 1, 2, fd);
-    fclose(fd);
-    if(memcmp(buf, "PK", 2) == 0) return (1);
-    return (0);
-}
-
-static char *load_archive(char *filename, int *file_size)
-{
-    int size = 0;
-    char *buf = NULL;
-    char text[128];	
-
-    unzFile fd = NULL;
-    unz_file_info info;
-    int ret = 0;
-         
-	/* Attempt to open the archive */
-	fd = unzOpen(filename);
-	if(!fd)
-	{
-		printf("Failed to open archive\r\n");
-		return NULL;
-	}
-
-	/* Go to first file in archive */
-	ret = unzGoToFirstFile(fd);
-	if(ret != UNZ_OK)
-	{
-		printf("Failed to find first file in zip\r\n");
-		unzClose(fd);
-		return NULL;
-	}
-
-	ret = unzGetCurrentFileInfo(fd, &info, NULL, 0, NULL, 0, NULL, 0);
-	if(ret != UNZ_OK)
-	{
-		printf("Failed to zip info\r\n");
-        unzClose(fd);
-        return NULL;
-	}
-
-	/* Open the file for reading */
-	ret = unzOpenCurrentFile(fd);
-	if(ret != UNZ_OK)
-	{
-	    printf("Failed to read file\r\n");
-		unzClose(fd);
-		return NULL;
-	}
-
-	/* Allocate file data buffer */
-	size = info.uncompressed_size;
-	buf=(char*)malloc(size);
-	if(!buf)
-	{
-		printf("Failed to malloc zip buffer\r\n");
-		unzClose(fd);
-		return NULL;
-	}
-	
-	/* Read (decompress) the file */
-	ret = unzReadCurrentFile(fd, buf, info.uncompressed_size);
-	if(ret != info.uncompressed_size)
-	{
-		free(buf);
-	    printf("File failed to uncompress fully\r\n");
-	    unzCloseCurrentFile(fd);
-		unzClose(fd);
-		return NULL;
-	}
-
-	/* Close the current file */
-	ret = unzCloseCurrentFile(fd);
-	if(ret != UNZ_OK)
-	{
-		free(buf);
-	    printf("Failed to close file in zip\r\n");
-	    unzClose(fd);
-		return NULL;
-	}
-
-	/* Close the archive */
-	ret = unzClose(fd);
-	if(ret != UNZ_OK)
-	{
-		free(buf);
-	    printf("Failed to close zip\r\n");
-	    return NULL;
-	}
-
-	/* Update file size and return pointer to file data */
-	*file_size = size;
-	return buf;
-}
-
-static int save_archive(char *filename, char *buffer, int size)
-{
-    uint8 *buf = NULL;
-    char text[128]="";	
-    zipFile fd = NULL;
-    int ret = 0;
-    fd=zipOpen(filename,0);
-    if(!fd)
-    {
-       printf("Failed to create zip\r\n");
-       return (0);
-    }
-
-    ret=zipOpenNewFileInZip(fd,"SNAPSHOT",
-			    NULL,
-				NULL,0,
-			    NULL,0,
-			    NULL,
-			    Z_DEFLATED,
-			    Z_BEST_COMPRESSION);
-			    
-    if(ret != ZIP_OK)
-    {
-       zipClose(fd,NULL);
-       printf("Failed to create file in zip\r\n");
-       return (0);    
-    }
-
-    ret=zipWriteInFileInZip(fd,buffer,size);
-    if(ret != ZIP_OK)
-    {
-      zipCloseFileInZip(fd);
-      zipClose(fd,NULL);
-      printf("Failed to write file in zip\r\n");
-      return (0);
-    }
-
-    ret=zipCloseFileInZip(fd);
-    if(ret != ZIP_OK)
-    {
-      zipClose(fd,NULL);
-      printf("Failed to close file in zip\r\n");
-      return (0);
-    }
-
-    ret=zipClose(fd,NULL);
-    if(ret != ZIP_OK)
-    {
-      printf("Failed to close zip\r\n");
-      return (0);
-    }
-	
-    return(1);
-}
-
-int state_unc_open(const char *fname, const char *mode)
-{
-	//mode = "wb"  or "rb"
-	//If mode is write then create a new buffer to hold written data
-	//when file is closed buffer will be compressed to zip file and then freed
-	if(mode[0]=='r')
-	{
-		//Read mode requested
-		if(check_zip((char*)fname))
-		{
-			//File is a zip, so uncompress
-			state_mode = 1; //zip mode
-			open_mode = 0;
-			state_mem=load_archive((char*)fname,&state_mem_size);
-			if(!state_mem) return 0;
-			state_mem_pos=0;
-			strcpy(state_filename,fname);
-			return 1;
-		}
-		else
-		{
-			state_mode = 0; //normal file mode
-			state_file = fopen(fname, mode);
-			return (int) state_file;
-		}
-	}
-	else
-	{
-		//Write mode requested. Zip only option
-		open_mode = 1;
-		state_mode = 1; //normal file mode
-		state_mem=(char*)malloc(200);
-		state_mem_size=200;
-		state_mem_pos = 0;
-		strcpy(state_filename,fname);
-		return 1;
-	}
-}
-
-int state_unc_read(void *p, int l)
-{
-	if(state_mode==0)
-	{
-		return fread(p, 1, l, state_file);
-	}
-	else
-	{
-		
-		if((state_mem_pos+l)>state_mem_size)
-		{
-			//Read requested that exceeded memory limits
-			return 0;
-		}
-		else
-		{
-			memcpy(p,state_mem+state_mem_pos,l);
-			state_mem_pos+=l;
-		}
-		return l;
-	}
-}
-
-int state_unc_write(void *p, int l)
-{
-	if(state_mode==0)
-	{
-		return fwrite(p, 1, l, state_file);
-	}
-	else
-	{
-		if((state_mem_pos+l)>state_mem_size)
-		{
-			//Write will exceed current buffer, re-alloc buffer and continue
-			state_mem=(char*)realloc(state_mem,state_mem_pos+l);
-			state_mem_size=state_mem_pos+l;
-		}
-		//Now do write
-		memcpy(state_mem+state_mem_pos,p,l);
-		state_mem_pos+=l;
-		return l;
-	}
-}
-
-void state_unc_close()
-{
-	if(state_mode==0)
-	{
-		fclose(state_file);
-	}
-	else
-	{
-		if (open_mode == 1)
-			save_archive(state_filename,state_mem,state_mem_size);
-		free(state_mem);
-		state_mem=NULL;
-		state_mem_size=0;
-		state_mem_pos=0;
-		state_filename[0]=0;
-	}
-}
-
 extern "C"
 {
 
@@ -819,17 +659,20 @@ int mainEntry(int argc, char* argv[])
 	sal_Init();
 	sal_VideoInit(16,SAL_RGB(0,0,0),60);
 
-	MenuInit(mSystemDir);
+	sal_DirectoryGetCurrent(mSystemDir,SAL_MAX_PATH);
+	MenuInit(mSystemDir,&mMenuOptions);
 
-	if (argc <= 0) 
+
+	//if (argc > 0) 
 	{
-		MenuMessageBox("No filename paramter supplied","POCKETSNES will now exit","Press any button to continue", MENU_MESSAGE_BOX_MODE_PAUSE);
-		sal_Reset();
-		return 0;
+		//Record ROM name
+ 		//strcpy(mRomName, argv[0]);
 	}
-
-	//Record ROM name
- 	strcpy(mRomName, argv[0]);
+	//else
+	{
+		//ensure rom name is cleared
+		mRomName[0]=0;
+	}
 
 	if(SnesInit() == SAL_ERROR)
 	{
@@ -839,10 +682,14 @@ int mainEntry(int argc, char* argv[])
 
 	while(1)
 	{
-		event=MenuRun(&mMenuOptions, mRomName, mSystemDir);
+		mInMenu=1;
+		event=MenuRun(mRomName);
+		mInMenu=0;
 
 		if(event==EVENT_LOAD_ROM)
 		{
+			if(mTempState) free(mTempState);
+			mTempState=NULL;
 			if(SnesRomLoad() == SAL_ERROR) 
 			{
 				MenuMessageBox("Failed to load rom",mRomName,"Press any button to continue", MENU_MESSAGE_BOX_MODE_PAUSE);
@@ -878,17 +725,25 @@ int mainEntry(int argc, char* argv[])
 				RunSound();
 			else	RunNoSound();
 
-			if(mMenuOptions.autoSaveSram)
-			{
-				MenuMessageBox("","","Saving SRAM...",MENU_MESSAGE_BOX_MODE_MSG);
-				S9xSaveSRAM();
-			}
-			
 			event=EVENT_NONE;
 		}
 
 		if(event==EVENT_EXIT_APP) break;	
 	}
+
+	if(mTempState) free(mTempState);
+	mTempState=NULL;
+	
+	S9xGraphicsDeinit();
+	S9xDeinitAPU();
+	Memory.Deinit();
+
+	free(GFX.SubZBuffer);
+	free(GFX.ZBuffer);
+	free(GFX.SubScreen);
+	GFX.SubZBuffer=NULL;
+	GFX.ZBuffer=NULL;
+	GFX.SubScreen=NULL;
 
 	sal_Reset();
   	return 0;

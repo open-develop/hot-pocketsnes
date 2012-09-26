@@ -5,13 +5,13 @@
 #include <dingoo/keyboard.h>
 #include <dingoo/jz4740.h>
 #include <jz4740/cpu.h>
+#include <dirent.h>
 #include "sal.h"
 #include "unzip.h"
 #include "zip.h"
 
 #define SAL_FRAME_BUFFER_COUNT	4
 #define SOUND_BUFFER_COUNT 	8
-#define CPU_SPEED_COUNT		5
 #define AUDIO_RATE_COUNT	5
 #define MAX_SOUND_LEN 	((48000/60)*2)
 
@@ -23,9 +23,10 @@ static u32 mSoundThreadFlag=0;
 static u32 mSoundLastCpuSpeed=0;
 static u32 mPaletteBuffer[0x100];
 static u32 mInputFirst=0;
+static s8  mCurrDir[SAL_MAX_PATH];
 
 s32 mAudioRateLookup[AUDIO_RATE_COUNT]={8250,11025,22050,44100,48000};
-u32 mCpuSpeedLookup[CPU_SPEED_COUNT]={   336,360,400,430,450};
+
 #include "sal_common.c"
 #include "sal_sound.c"
 #include "sal_filesys.c"
@@ -103,6 +104,34 @@ void sal_CpuSpeedSet(u32 mhz)
 	cpu_clock_set(tempCore);
 }
 
+u32 sal_CpuSpeedNext(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed+1;
+	if(newSpeed > 500) newSpeed = 500;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedPrevious(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed-1;
+	if(newSpeed > 500) newSpeed = 0;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedNextFast(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed+10;
+	if(newSpeed > 500) newSpeed = 500;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedPreviousFast(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed-10;
+	if(newSpeed > 500) newSpeed = 0;
+	return newSpeed;
+}
+
 s32 sal_Init(void)
 {
 	sal_TimerInit(60);
@@ -117,6 +146,24 @@ void sal_Reset(void)
 
 
 
+static
+void GamePathInit(const char* inPath) {
+	uintptr_t i, j;
+	for(i = 0, j = 0; inPath[i] != '\0'; i++) {
+		if((inPath[i] == '\\') || (inPath[i] == '/'))
+			j = i;// + 1;
+	}
+	strncpy(mCurrDir, inPath, j);
+	mCurrDir[j] = '\0';
+    /*
+    ** Static (hard coded) path examples
+    strcpy(gamePath, "a:\\"); // WORKS
+    strcpy(gamePath, "a:/"); // unix style path FAILS
+    strcpy(gamePath, "a:\\"); // DEBUG NOTE multiple slashes which results in look up failure 
+    */
+}
+
+
 int mainEntry(int argc, char *argv[]);
 
 // Prove entry point wrapper
@@ -126,8 +173,8 @@ int main(int argc, char *argv[])
 	srand(OSTimeGet());
 
 	
-
-	return mainEntry(argc,argv);
+	GamePathInit(argv[0]); /* workout directory containing this exe and list it */
+	return mainEntry(1,argv);
 }
 
 

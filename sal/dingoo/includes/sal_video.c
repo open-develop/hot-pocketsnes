@@ -65,29 +65,6 @@ u32 sal_VideoInit(u32 bpp, u32 color, u32 refreshRate)
 	return SAL_OK;
 }
 
-/* alekmaul's scaler taken from mame4all */
-void bitmap_scale(int startx, int starty, int viswidth, int visheight, int newwidth, int newheight,int pitch, uint16_t *src, uint16_t *dst) {
-  unsigned int W,H,ix,iy,x,y;
-  x=startx<<16;
-  y=starty<<16;
-  W=newwidth;
-  H=newheight;
-  ix=(viswidth<<16)/W;
-  iy=(visheight<<16)/H;
-
-  do
-  {
-    uint16_t *buffer_mem=&src[(y>>16)*320];
-    W=newwidth; x=startx<<16;
-    do {
-      *dst++=buffer_mem[x>>16];
-      x+=ix;
-    } while (--W);
-    dst+=pitch;
-    y+=iy;
-  } while (--H);
-}
-
 void sal_VideoFlip(s32 vsync)
 {
 	u32 address=(u32)mFbMem[mFb];
@@ -112,7 +89,7 @@ void sal_VideoFlip(s32 vsync)
 	//Do scaling if required
 	if(mVideoScaled)
 	{
-		bitmap_scale(0, 0, mVideoScaleWidth, mVideoScaleHeight, 320, 240, 0, &mFbScalingTemp[0], mFbMem[mFb]);
+		sal_VideoBitmapScale(0, 0, mVideoScaleWidth, mVideoScaleHeight, 320, 240, 0, &mFbScalingTemp[0], mFbMem[mFb]);
 	}
 	else
 	{

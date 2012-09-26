@@ -22,7 +22,8 @@
 
 enum  MENU_ENUM
 {
-	MENU_RETURN = 0,	
+	MENU_RETURN = 0,
+	MENU_ROM_SELECT,	
 	MENU_STATE,
 	MENU_RESET_GAME,
 	MENU_SAVE_SRAM,
@@ -91,6 +92,7 @@ enum MENU_MESSAGE_BOX_MODE
 #define INP_BUTTON_MENU_CANCEL			SAL_INPUT_B
 #define INP_BUTTON_MENU_ENTER			SAL_INPUT_SELECT
 #define INP_BUTTON_MENU_DELETE			SAL_INPUT_SELECT
+#define INP_BUTTON_MENU_PREVIEW_SAVESTATE	SAL_INPUT_Y
 #define INP_BUTTON_MENU_QUICKSAVE1		SAL_INPUT_R
 #define INP_BUTTON_MENU_QUICKSAVE2		SAL_INPUT_SELECT
 #define INP_BUTTON_MENU_QUICKLOAD1		SAL_INPUT_L
@@ -138,8 +140,8 @@ struct SAVE_STATE
 //####################################
 //# Functions
 //####################################
-void MenuInit(s8 *systemDir);
-s32 MenuRun(struct MENU_OPTIONS *menuOptions, s8 *romName, s8 *systemDir);
+void MenuInit(s8 *systemDir,struct MENU_OPTIONS *menuOptions);
+s32 MenuRun(s8 *romName);
 void LoadSram(s8 *path,s8 *romname,s8 *ext,s8 *srammem);
 void SaveSram(s8 *path,s8 *romname,s8 *ext,s8 *srammem);
 void DeleteSram(s8 *path,s8 *romname,s8 *ext);

@@ -39,6 +39,30 @@ void sal_LastErrorSet(char *msg)
 	strcpy(mLastError,msg);
 }
 
+/* alekmaul's scaler taken from mame4all */
+void sal_VideoBitmapScale(int startx, int starty, int viswidth, int visheight, int newwidth, int newheight,int pitch, uint16_t *src, uint16_t *dst) 
+{
+  unsigned int W,H,ix,iy,x,y;
+  x=startx<<16;
+  y=starty<<16;
+  W=newwidth;
+  H=newheight;
+  ix=(viswidth<<16)/W;
+  iy=(visheight<<16)/H;
+
+  do
+  {
+    u16 *buffer_mem=&src[(y>>16)*320];
+    W=newwidth; x=startx<<16;
+    do {
+      *dst++=buffer_mem[x>>16];
+      x+=ix;
+    } while (--W);
+    dst+=pitch;
+    y+=iy;
+  } while (--H);
+}
+
 void sal_VideoDrawRect8(s32 x, s32 y, s32 width, s32 height, u8 color)
 {
 	u8 *pixy = (u8*)sal_VideoGetBuffer();
@@ -910,30 +934,6 @@ s32 sal_ImageLoad(const char *fname, void *dest, u32 width, u32 height)
 	png_destroy_read_struct(&png_ptr, info_ptr ? &info_ptr : NULL, (png_infopp)NULL);
 	fclose(fp);
 	return SAL_OK;
-}
-
-u32 sal_CpuSpeedNext(u32 currSpeed)
-{
-	s32 x;
-	u32 newSpeed;
-	for (x=0;x<CPU_SPEED_COUNT;x++)
-	{
-		newSpeed=mCpuSpeedLookup[x];
-		if(newSpeed>currSpeed) break;
-	}
-	return newSpeed;
-}
-
-u32 sal_CpuSpeedPrevious(u32 currSpeed)
-{
-	s32 x;
-	u32 newSpeed;
-	for (x=CPU_SPEED_COUNT-1; x>=0; x--)
-	{
-		newSpeed=mCpuSpeedLookup[x];
-		if(newSpeed<currSpeed) break;
-	}
-	return newSpeed;
 }
 
 u32 sal_AudioRateNext(u32 currRate)

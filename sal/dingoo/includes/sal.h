@@ -6,6 +6,19 @@
 extern "C" {
 #endif
 
+typedef unsigned int u32;
+typedef unsigned short int u16;
+typedef unsigned char u8;
+typedef int s32;
+typedef short int s16;
+typedef char s8;
+
+struct SAL_DIR
+{
+	struct DIR *dir;
+	u32 needParent;
+};
+
 #define SAL_INPUT_INDEX_UP			20
 #define SAL_INPUT_INDEX_DOWN			27
 #define SAL_INPUT_INDEX_LEFT			28

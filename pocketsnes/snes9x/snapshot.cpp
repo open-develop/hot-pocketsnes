@@ -72,6 +72,9 @@ void S9xSuperFXPostLoadState ();
 END_EXTERN_C
 #endif
 
+// notaz: file i/o function pointers for states,
+#include "savestateio.h"
+
 bool8_32 S9xUnfreezeZSNES (const char *filename);
 
 typedef struct {
@@ -393,15 +396,15 @@ static FreezeData SnapSA1 [] = {
 static char ROMFilename [_MAX_PATH];
 //static char SnapshotFilename [_MAX_PATH];
 
-static void Freeze (STREAM);
-static int Unfreeze (STREAM);
-void FreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
+static void Freeze ();
+static int Unfreeze ();
+void FreezeStruct (char *name, void *base, FreezeData *fields,
 		   int num_fields);
-void FreezeBlock (STREAM stream, char *name, uint8 *block, int size);
+void FreezeBlock (char *name, uint8 *block, int size);
 
-int UnfreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
+int UnfreezeStruct (char *name, void *base, FreezeData *fields,
 		    int num_fields);
-int UnfreezeBlock (STREAM stream, char *name, uint8 *block, int size);
+int UnfreezeBlock (char *name, uint8 *block, int size);
 
 bool8_32 Snapshot (const char *filename)
 {
@@ -410,13 +413,11 @@ bool8_32 Snapshot (const char *filename)
 
 bool8_32 S9xFreezeGame (const char *filename)
 {
-    STREAM stream = NULL;
-
-    if (S9xOpenSnapshotFile (filename, FALSE, &stream))
+    if(statef_open(filename, "wb"))
     {
-	Freeze (stream);
-	S9xCloseSnapshotFile (stream);
-	return (TRUE);
+		Freeze();
+		statef_close();
+		return (TRUE);
     }
     return (FALSE);
 }
@@ -428,17 +429,16 @@ bool8_32 S9xLoadSnapshot (const char *filename)
 
 bool8_32 S9xUnfreezeGame (const char *filename)
 {
-    if (S9xLoadOrigSnapshot (filename))
-	return (TRUE);
+    //if (S9xLoadOrigSnapshot (filename))
+	//return (TRUE);
 
-    if (S9xUnfreezeZSNES (filename))
-	return (TRUE);
+    //if (S9xUnfreezeZSNES (filename))
+	//return (TRUE);
 
-    STREAM snapshot = NULL;
-    if (S9xOpenSnapshotFile (filename, TRUE, &snapshot))
+    if(statef_open(filename, "rb"))
     {
 	int result;
-	if ((result = Unfreeze (snapshot)) != SUCCESS)
+	if ((result = Unfreeze ()) != SUCCESS)
 	{
 	    switch (result)
 	    {
@@ -457,16 +457,16 @@ bool8_32 S9xUnfreezeGame (const char *filename)
 		S9xMessage (S9X_ERROR, S9X_ROM_NOT_FOUND, String);
 		break;
 	    }
-	    S9xCloseSnapshotFile (snapshot);
+	    statef_close();
 	    return (FALSE);
 	}
-	S9xCloseSnapshotFile (snapshot);
+	statef_close();
 	return (TRUE);
     }
     return (FALSE);
 }
 
-static void Freeze (STREAM stream)
+static void Freeze ()
 {
     char buffer [1024];
     int i;
@@ -485,36 +485,36 @@ static void Freeze (STREAM stream)
 	SoundData.channels [i].previous16 [1] = (int16) SoundData.channels [i].previous [1];
     }
     sprintf (buffer, "%s:%04d\n", SNAPSHOT_MAGIC, SNAPSHOT_VERSION);
-    WRITE_STREAM (buffer, strlen (buffer), stream);
+    statef_write (buffer, strlen (buffer));
     sprintf (buffer, "NAM:%06d:%s%c", strlen (Memory.ROMFilename) + 1,
 	     Memory.ROMFilename, 0);
-    WRITE_STREAM (buffer, strlen (buffer) + 1, stream);
-    FreezeStruct (stream, "CPU", &CPU, SnapCPU, COUNT (SnapCPU));
-    FreezeStruct (stream, "REG", &Registers, SnapRegisters, COUNT (SnapRegisters));
-    FreezeStruct (stream, "PPU", &PPU, SnapPPU, COUNT (SnapPPU));
-    FreezeStruct (stream, "DMA", DMA, SnapDMA, COUNT (SnapDMA));
+    statef_write (buffer, strlen (buffer) + 1);
+    FreezeStruct ("CPU", &CPU, SnapCPU, COUNT (SnapCPU));
+    FreezeStruct ("REG", &Registers, SnapRegisters, COUNT (SnapRegisters));
+    FreezeStruct ("PPU", &PPU, SnapPPU, COUNT (SnapPPU));
+    FreezeStruct ("DMA", DMA, SnapDMA, COUNT (SnapDMA));
 
 // RAM and VRAM
-    FreezeBlock (stream, "VRA", Memory.VRAM, 0x10000);
-    FreezeBlock (stream, "RAM", Memory.RAM, 0x20000);
-    FreezeBlock (stream, "SRA", ::SRAM, 0x20000);
-    FreezeBlock (stream, "FIL", Memory.FillRAM, 0x8000);
+    FreezeBlock ("VRA", Memory.VRAM, 0x10000);
+    FreezeBlock ("RAM", Memory.RAM, 0x20000);
+    FreezeBlock ("SRA", ::SRAM, 0x20000);
+    FreezeBlock ("FIL", Memory.FillRAM, 0x8000);
     if (Settings.APUEnabled)
     {
 // APU
-	FreezeStruct (stream, "APU", &APU, SnapAPU, COUNT (SnapAPU));
-	FreezeStruct (stream, "ARE", &APURegisters, SnapAPURegisters,
+	FreezeStruct ("APU", &APU, SnapAPU, COUNT (SnapAPU));
+	FreezeStruct ("ARE", &APURegisters, SnapAPURegisters,
 		      COUNT (SnapAPURegisters));
-	FreezeBlock (stream, "ARA", IAPU.RAM, 0x10000);
-	FreezeStruct (stream, "SOU", &SoundData, SnapSoundData,
+	FreezeBlock ("ARA", IAPU.RAM, 0x10000);
+	FreezeStruct ("SOU", &SoundData, SnapSoundData,
 		      COUNT (SnapSoundData));
     }
     if (Settings.SA1)
     {
 	SA1Registers.PC = SA1.PC - SA1.PCBase;
 	S9xSA1PackStatus ();
-	FreezeStruct (stream, "SA1", &SA1, SnapSA1, COUNT (SnapSA1));
-	FreezeStruct (stream, "SAR", &SA1Registers, SnapSA1Registers, 
+	FreezeStruct ("SA1", &SA1, SnapSA1, COUNT (SnapSA1));
+	FreezeStruct ("SAR", &SA1Registers, SnapSA1Registers, 
 		      COUNT (SnapSA1Registers));
     }
     S9xSetSoundMute (FALSE);
@@ -527,7 +527,7 @@ static void Freeze (STREAM stream)
 #ifdef _SNESPPC
 #pragma warning(disable : 4018)
 #endif
-static int Unfreeze (STREAM stream)
+static int Unfreeze ()
 {
     char buffer [_MAX_PATH + 1];
     char rom_filename [_MAX_PATH + 1];
@@ -535,14 +535,14 @@ static int Unfreeze (STREAM stream)
 
     int version;
     int len = strlen (SNAPSHOT_MAGIC) + 1 + 4 + 1;
-    if (READ_STREAM (buffer, len, stream) != len)
+    if (statef_read (buffer, len) != len)
 	return (WRONG_FORMAT);
     if (strncmp (buffer, SNAPSHOT_MAGIC, strlen (SNAPSHOT_MAGIC)) != 0)
 	return (WRONG_FORMAT);
     if ((version = atoi (&buffer [strlen (SNAPSHOT_MAGIC) + 1])) > SNAPSHOT_VERSION)
 	return (WRONG_VERSION);
 
-    if ((result = UnfreezeBlock (stream, "NAM", (uint8 *) rom_filename, _MAX_PATH)) != SUCCESS)
+    if ((result = UnfreezeBlock ("NAM", (uint8 *) rom_filename, _MAX_PATH)) != SUCCESS)
 	return (result);
 
     if (strcasecmp (rom_filename, Memory.ROMFilename) != 0 &&
@@ -557,15 +557,15 @@ static int Unfreeze (STREAM stream)
     S9xReset ();
     S9xSetSoundMute (TRUE);
 
-    if ((result = UnfreezeStruct (stream, "CPU", &CPU, SnapCPU, 
+    if ((result = UnfreezeStruct ("CPU", &CPU, SnapCPU, 
 				  COUNT (SnapCPU))) != SUCCESS)
 	return (result);
     Memory.FixROMSpeed ();
     CPU.Flags |= old_flags & (DEBUG_MODE_FLAG | TRACE_FLAG |
 			      SINGLE_STEP_FLAG | FRAME_ADVANCE_FLAG);
-    if ((result = UnfreezeStruct (stream, "REG", &Registers, SnapRegisters, COUNT (SnapRegisters))) != SUCCESS)
+    if ((result = UnfreezeStruct ("REG", &Registers, SnapRegisters, COUNT (SnapRegisters))) != SUCCESS)
 	return (result);
-    if ((result = UnfreezeStruct (stream, "PPU", &PPU, SnapPPU, COUNT (SnapPPU))) != SUCCESS)
+    if ((result = UnfreezeStruct ("PPU", &PPU, SnapPPU, COUNT (SnapPPU))) != SUCCESS)
 	return (result);
 
     IPPU.ColorsChanged = TRUE;
@@ -574,25 +574,25 @@ static int Unfreeze (STREAM stream)
     S9xFixColourBrightness ();
     IPPU.RenderThisFrame = FALSE;
 
-    if ((result = UnfreezeStruct (stream, "DMA", DMA, SnapDMA, 
+    if ((result = UnfreezeStruct ("DMA", DMA, SnapDMA, 
 				  COUNT (SnapDMA))) != SUCCESS)
 	return (result);
-    if ((result = UnfreezeBlock (stream, "VRA", Memory.VRAM, 0x10000)) != SUCCESS)
+    if ((result = UnfreezeBlock ("VRA", Memory.VRAM, 0x10000)) != SUCCESS)
 	return (result);
-    if ((result = UnfreezeBlock (stream, "RAM", Memory.RAM, 0x20000)) != SUCCESS)
+    if ((result = UnfreezeBlock ("RAM", Memory.RAM, 0x20000)) != SUCCESS)
 	return (result);
-    if ((result = UnfreezeBlock (stream, "SRA", ::SRAM, 0x20000)) != SUCCESS)
+    if ((result = UnfreezeBlock ("SRA", ::SRAM, 0x20000)) != SUCCESS)
 	return (result);
-    if ((result = UnfreezeBlock (stream, "FIL", Memory.FillRAM, 0x8000)) != SUCCESS)
+    if ((result = UnfreezeBlock ("FIL", Memory.FillRAM, 0x8000)) != SUCCESS)
 	return (result);
-    if (UnfreezeStruct (stream, "APU", &APU, SnapAPU, COUNT (SnapAPU)) == SUCCESS)
+    if (UnfreezeStruct ("APU", &APU, SnapAPU, COUNT (SnapAPU)) == SUCCESS)
     {
-	if ((result = UnfreezeStruct (stream, "ARE", &APURegisters, SnapAPURegisters,
+	if ((result = UnfreezeStruct ("ARE", &APURegisters, SnapAPURegisters,
 				      COUNT (SnapAPURegisters))) != SUCCESS)
 	    return (result);
-	if ((result = UnfreezeBlock (stream, "ARA", IAPU.RAM, 0x10000)) != SUCCESS)
+	if ((result = UnfreezeBlock ("ARA", IAPU.RAM, 0x10000)) != SUCCESS)
 	    return (result);
-	if ((result = UnfreezeStruct (stream, "SOU", &SoundData, SnapSoundData,
+	if ((result = UnfreezeStruct ("SOU", &SoundData, SnapSoundData,
 				      COUNT (SnapSoundData))) != SUCCESS)
 	    return (result);
 
@@ -612,10 +612,10 @@ static int Unfreeze (STREAM stream)
 	IAPU.APUExecuting = FALSE;
 	S9xSetSoundMute (TRUE);
     }
-    if ((result = UnfreezeStruct (stream, "SA1", &SA1, SnapSA1, 
+    if ((result = UnfreezeStruct ("SA1", &SA1, SnapSA1, 
 				  COUNT(SnapSA1))) == SUCCESS)
     {
-	if ((result = UnfreezeStruct (stream, "SAR", &SA1Registers, 
+	if ((result = UnfreezeStruct ("SAR", &SA1Registers, 
 				      SnapSA1Registers, COUNT (SnapSA1Registers))) != SUCCESS)
 	    return (result);
 
@@ -654,7 +654,7 @@ int FreezeSize (int size, int type)
     }
 }
 
-void FreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
+void FreezeStruct (char *name, void *base, FreezeData *fields,
 		   int num_fields)
 {
     // Work out the size of the required block
@@ -737,20 +737,20 @@ void FreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
 	}
     }
 
-    FreezeBlock (stream, name, block, len);
+    FreezeBlock (name, block, len);
     delete block;
 }
 
-void FreezeBlock (STREAM stream, char *name, uint8 *block, int size)
+void FreezeBlock (char *name, uint8 *block, int size)
 {
     char buffer [512];
     sprintf (buffer, "%s:%06d:", name, size);
-    WRITE_STREAM (buffer, strlen (buffer), stream);
-    WRITE_STREAM (block, size, stream);
+    statef_write (buffer, strlen (buffer));
+    statef_write (block, size);
     
 }
 
-int UnfreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
+int UnfreezeStruct (char *name, void *base, FreezeData *fields,
 		     int num_fields)
 {
     // Work out the size of the required block
@@ -773,7 +773,7 @@ int UnfreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
     int64  qword;
     int result;
 
-    if ((result = UnfreezeBlock (stream, name, block, len)) != SUCCESS)
+    if ((result = UnfreezeBlock (name, block, len)) != SUCCESS)
     {
 	delete block;
 	return (result);
@@ -844,13 +844,13 @@ int UnfreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
     return (result);
 }
 
-int UnfreezeBlock (STREAM stream, char *name, uint8 *block, int size)
+int UnfreezeBlock (char *name, uint8 *block, int size)
 {
     char buffer [20];
     int len = 0;
     int rem = 0;
     
-    if (READ_STREAM (buffer, 11, stream) != 11 ||
+    if (statef_read (buffer, 11) != 11 ||
 	strncmp (buffer, name, 3) != 0 || buffer [3] != ':' ||
 	(len = atoi (&buffer [4])) == 0)
     {
@@ -862,13 +862,13 @@ int UnfreezeBlock (STREAM stream, char *name, uint8 *block, int size)
 	rem = len - size;
 	len = size;
     }
-    if (READ_STREAM (block, len, stream) != len)
+    if (statef_read (block, len) != len)
 	return (WRONG_FORMAT);
 
     if (rem)
     {
 	char *junk = new char [rem];
-	READ_STREAM (junk, rem, stream);
+	statef_read (junk, rem);
 	delete junk;
     }
 	

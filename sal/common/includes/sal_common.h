@@ -2,12 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef unsigned int u32;
-typedef unsigned short int u16;
-typedef unsigned char u8;
-typedef int s32;
-typedef short int s16;
-typedef char s8;
+
 
 enum  SAL_FILE_TYPE_ENUM
 {
@@ -38,6 +33,7 @@ void *sal_VideoGetBuffer();
 u32 sal_VideoSetScaling(s32 width, s32 height);
 void sal_VideoPaletteSet(u32 index, u32 color);
 void sal_VideoPaletteSync();
+void sal_VideoBitmapScale(int startx, int starty, int viswidth, int visheight, int newwidth, int newheight,int pitch, u16 *src, u16 *dst);
 
 s32 sal_AudioInit(s32 rate, s32 bits, s32 stereo, s32 Hz);
 void sal_AudioClose(void);
@@ -55,6 +51,8 @@ u32 sal_AudioRateNext(u32 currRate);
 void sal_CpuSpeedSet(u32 mhz);
 u32 sal_CpuSpeedPrevious(u32 currSpeed);
 u32 sal_CpuSpeedNext(u32 currSpeed);
+u32 sal_CpuSpeedPreviousFast(u32 currSpeed);
+u32 sal_CpuSpeedNextFast(u32 currSpeed);
 
 void sal_Reset(void);
 s32 sal_TimerInit(s32 freq);
@@ -90,6 +88,9 @@ void sal_DirectoryCombine(s8 *path, s8 *name);
 s32 sal_DirectoryGetItemCount(s8 *path, s32 *returnItemCount);
 s32 sal_DirectoryGet(s8 *path, struct SAL_DIRECTORY_ENTRY *dir, s32 startIndex, s32 count);
 s32 sal_DirectoryCreate(s8 *path);
+s32 sal_DirectoryOpen(s8 *path, struct SAL_DIR *d);
+s32 sal_DirectoryClose(struct SAL_DIR *d);
+s32 sal_DirectoryRead(struct SAL_DIR *d, struct SAL_DIRECTORY_ENTRY *dir);
 
 s32 sal_ImageLoad(const char *fname, void *dest, u32 width, u32 height);
 s32 sal_ImageDrawTiled(u16 *image, u32 width, u32 height, s32 xScroll, s32 yScroll, s32 x, s32 y);

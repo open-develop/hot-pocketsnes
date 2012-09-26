@@ -56,6 +56,9 @@
 #include "srtc.h"
 #include "sdd1.h"
 
+#include "sal.h"
+#include "menu.h"
+
 #ifndef ZSNES_FX
 #include "fxemu.h"
 extern struct FxInit_s SuperFX;

@@ -138,7 +138,7 @@ void _splitpath (const char *path, char *drive, char *dir, char *fname,
 #define inline __inline
 #endif
 
-#define SNES_SYSTEM_DIR "a:\\game\\pocketsnes"
+#define SNES_SYSTEM_DIR "a:\\game\\3d\\pocketsnes"
 
 #endif //  _SNESPPC
 

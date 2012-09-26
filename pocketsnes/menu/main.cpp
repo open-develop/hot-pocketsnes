@@ -663,7 +663,7 @@ int mainEntry(int argc, char* argv[])
 	{
 		//Record ROM name
  		strcpy(mRomName, argv[1]);
-		strcpy(mSystemDir,"a:\\game\\pocketsnes");
+		strcpy(mSystemDir,"a:\\game\\3d\\pocketsnes");
 	}
 	else
 	{

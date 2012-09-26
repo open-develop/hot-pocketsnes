@@ -659,20 +659,21 @@ int mainEntry(int argc, char* argv[])
 	sal_Init();
 	sal_VideoInit(16,SAL_RGB(0,0,0),60);
 
-	sal_DirectoryGetCurrent(mSystemDir,SAL_MAX_PATH);
-	MenuInit(mSystemDir,&mMenuOptions);
-
-
-	//if (argc > 0) 
+	if (argc >= 2) 
 	{
 		//Record ROM name
- 		//strcpy(mRomName, argv[0]);
+ 		strcpy(mRomName, argv[1]);
+		strcpy(mSystemDir,"a:\\game\\pocketsnes");
 	}
-	//else
+	else
 	{
 		//ensure rom name is cleared
 		mRomName[0]=0;
+		sal_DirectoryGetCurrent(mSystemDir,SAL_MAX_PATH);
 	}
+
+	MenuInit(mSystemDir,&mMenuOptions);
+
 
 	if(SnesInit() == SAL_ERROR)
 	{

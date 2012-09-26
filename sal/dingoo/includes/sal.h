@@ -13,11 +13,7 @@ typedef int s32;
 typedef short int s16;
 typedef char s8;
 
-struct SAL_DIR
-{
-	struct DIR *dir;
-	u32 needParent;
-};
+
 
 #define SAL_INPUT_INDEX_UP			20
 #define SAL_INPUT_INDEX_DOWN			27
@@ -72,6 +68,14 @@ struct SAL_DIR
 #define SAL_RGB_PAL(r,g,b) SAL_RGB(r,g,b)
 
 #define SAL_MAX_PATH	256
+
+struct SAL_DIR
+{
+	struct DIR *dir;
+	u32 needParent;
+	s8 *path[SAL_MAX_PATH];
+	u32 drivesRead;
+};
 
 #include "sal_common.h"
 

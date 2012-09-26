@@ -1254,7 +1254,12 @@ s32 MenuRun(s8 *romName)
 	sal_VideoInit(16,0,60);
 	sal_VideoSetScaling(320,240);
 
-	strcpy(mRomName,romName);
+	if(sal_StringCompare(mRomName,romName)!=0)
+	{
+		action=EVENT_LOAD_ROM;
+		strcpy(mRomName,romName);
+		return action;
+	}
 
 	if((mMenuOptions->autoSaveSram) && (mRomName[0]!=0))
 	{

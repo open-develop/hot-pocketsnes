@@ -144,8 +144,6 @@ void sal_Reset(void)
 	sal_AudioClose();
 }
 
-
-
 static
 void GamePathInit(const char* inPath) {
 	uintptr_t i, j;
@@ -166,6 +164,7 @@ void GamePathInit(const char* inPath) {
 
 int mainEntry(int argc, char *argv[]);
 
+#if defined(__DINGOO_APP__)
 // Prove entry point wrapper
 int main(int argc, char *argv[])
 {	
@@ -176,5 +175,17 @@ int main(int argc, char *argv[])
 	GamePathInit(argv[0]); /* workout directory containing this exe and list it */
 	return mainEntry(1,argv);
 }
+#endif
+
+#if defined(__DINGOO_SIM__)
+// Prove entry point wrapper
+int main(int argc, char *argv[])
+{	
+	//Seed random generator
+	srand(OSTimeGet());
+	char *newArgs[2]={argv[0],argv[0]};
+	return mainEntry(2,&newArgs[0]);
+}
+#endif
 
 

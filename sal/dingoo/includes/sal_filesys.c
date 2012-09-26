@@ -79,80 +79,158 @@ s32 sal_DirectoryGet(s8 *path, struct SAL_DIRECTORY_ENTRY *dir, s32 startIndex, 
 
 s32 sal_DirectoryOpen(s8 *path, struct SAL_DIR *d)
 {
-	d->dir=opendir((const char*)path);
-	d->needParent=1;
-	if(d->dir) return SAL_OK;
-	else return SAL_ERROR;
+	if(path[0] == 0)
+	{
+		//special case to get list of drives
+		d->needParent=0;
+		d->drivesRead=0;
+		strcpy(d->path,path);
+		return SAL_OK;
+	}
+	else
+	{
+		d->dir=opendir((const char*)path);
+		d->needParent=1;
+		strcpy(d->path,path);
+		if(d->dir) return SAL_OK;
+		else return SAL_ERROR;
+	}
 }
 
 s32 sal_DirectoryClose(struct SAL_DIR *d)
 {
-	if(d)
+	if(d->path[0] == 0)
 	{
-		if(d->dir)
-		{
-			closedir(d->dir);
-			d->dir=NULL;
-			return SAL_OK;
-		}
-		else
-		{
-			return SAL_ERROR;
-		}
+		d->dir=NULL;
+		d->path[0]=0;
+		return SAL_OK;
 	}
 	else
 	{
-		return SAL_ERROR;
-	}
-}
-
-s32 sal_DirectoryRead(struct SAL_DIR *d, struct SAL_DIRECTORY_ENTRY *dir)
-{
-	struct dirent *de=NULL;
-
-	if(d)
-	{
-		if(d->needParent)
+		if(d)
 		{
-			strcpy(dir->filename,"..");
-			strcpy(dir->displayName,"..");
-			dir->type=SAL_FILE_TYPE_DIRECTORY;
-			d->needParent=0;
-			return SAL_OK;
-		}
-		else
-		{
-			if(dir)
+			if(d->dir)
 			{
-				de=readdir(d->dir);
-				if(de)
-				{
-					strcpy(dir->filename,de->d_name);
-					strcpy(dir->displayName,de->d_name);
-					if (de->d_type == FSYS_ATTR_DIR)
-					{
-						dir->type=SAL_FILE_TYPE_DIRECTORY;
-					}
-					else
-					{
-						dir->type=SAL_FILE_TYPE_FILE;
-					}
-					return SAL_OK;
-				}
-				else
-				{
-					return SAL_ERROR;
-				}
+				closedir(d->dir);
+				d->dir=NULL;
+				d->path[0]=0;
+				return SAL_OK;
 			}
 			else
 			{
 				return SAL_ERROR;
 			}
 		}
+		else
+		{
+			return SAL_ERROR;
+		}
+	}
+}
+
+s32 sal_DirectoryRead(struct SAL_DIR *d, struct SAL_DIRECTORY_ENTRY *dir)
+{
+	struct dirent *de=NULL;
+	if(d->path[0] == 0)
+	{
+		switch(d->drivesRead)
+		{
+			case 0:
+				strcpy(dir->filename,"a:\\");
+				strcpy(dir->displayName,"a:\\");
+				dir->type=SAL_FILE_TYPE_DIRECTORY;
+				d->drivesRead++;
+				return SAL_OK;
+			case 1:
+				strcpy(dir->filename,"b:\\");
+				strcpy(dir->displayName,"b:\\");
+				dir->type=SAL_FILE_TYPE_DIRECTORY;
+				d->drivesRead++;
+				return SAL_OK;
+			case 2:
+				return SAL_ERROR;
+				
+		}
+		return SAL_OK;
 	}
 	else
 	{
-		return SAL_ERROR;
+		if(d)
+		{
+			if(d->needParent)
+			{
+				strcpy(dir->filename,"..");
+				strcpy(dir->displayName,"..");
+				dir->type=SAL_FILE_TYPE_DIRECTORY;
+				d->needParent=0;
+				return SAL_OK;
+			}
+			else
+			{
+				if(dir)
+				{
+					de=readdir(d->dir);
+					if(de)
+					{
+						strcpy(dir->filename,de->d_name);
+						strcpy(dir->displayName,de->d_name);
+						if (de->d_type == FSYS_ATTR_DIR)
+						{
+							dir->type=SAL_FILE_TYPE_DIRECTORY;
+						}
+						else
+						{
+							dir->type=SAL_FILE_TYPE_FILE;
+						}
+						return SAL_OK;
+					}
+					else
+					{
+						return SAL_ERROR;
+					}
+				}
+				else
+				{
+					return SAL_ERROR;
+				}
+			}
+		}
+		else
+		{
+			return SAL_ERROR;
+		}
+	}
+}
+
+void sal_DirectoryGetParent(s8 *path)
+{
+	s32 i=0;
+	s32 lastDir=-1, firstDir=-1;
+	s8 dirSep[2] = {SAL_DIR_SEP};
+	s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
+	s32 len=(s32)strlen(path);
+
+	for(i=0;i<len;i++)
+	{
+		if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))
+		{
+			//Directory seperator found
+			if(lastDir==-1) firstDir = i;
+			if(i+1 != len) lastDir = i;
+		}
+	}
+
+	if (lastDir == firstDir) lastDir++; 
+	if (lastDir >= 0) 
+	{
+		for(i=lastDir; i<len; i++)
+		{
+			path[i]=0;
+		}
+	}
+	else
+	{
+		path[0]=0;
 	}
 }
 

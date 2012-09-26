@@ -725,34 +725,6 @@ void sal_DirectorySplitFilename(s8 *wholeFilename, s8* path, s8 *filename, s8 *e
 	}
 }
 
-void sal_DirectoryGetParent(s8 *path)
-{
-	s32 i=0;
-	s32 lastDir=-1, firstDir=-1;
-	s8 dirSep[2] = {SAL_DIR_SEP};
-	s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
-	s32 len=(s32)strlen(path);
-
-	for(i=0;i<len;i++)
-	{
-		if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))
-		{
-			//Directory seperator found
-			if(lastDir==-1) firstDir = i;
-			if(i+1 != len) lastDir = i;
-		}
-	}
-
-	if (lastDir == firstDir) lastDir++; 
-	if (lastDir >= 0) 
-	{
-		for(i=lastDir; i<len; i++)
-		{
-			path[i]=0;
-		}
-	}
-}
-
 void sal_DirectoryCombine(s8 *path, s8 *name)
 {
 	s32 len = strlen(path);

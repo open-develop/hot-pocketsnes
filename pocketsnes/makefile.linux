@@ -1,0 +1,68 @@
+
+# Define the applications properties here:
+
+APP_NAME = pocketsnes
+
+# Define the compiler settings here:
+TOOLCHAIN = /usr
+
+CPP       = $(TOOLCHAIN)/bin/g++
+CC        = $(TOOLCHAIN)/bin/gcc
+LD        = $(TOOLCHAIN)/bin/ld
+
+SOURCE    = ./snes9x ./menu ../sal/linux ../sal/common
+
+INCLUDE   = -I$(TOOLCHAIN)/include \
+		-I$(TOOLCHAIN)/include/zlib \
+		-I$(TOOLCHAIN)/include/SDL \
+		-I . \
+		-I ../sal/linux -I ../sal/linux/include \
+		-I ../sal/common -I ../sal/common/includes \
+		-I ./snes9x_included \
+		-I ./menu -I ./linux -I ./snes9x -I ./snes9x_include -I$ 
+
+W_OPTS    = -g -O3 $(shell sdl-config --cflags) -D__LINUX__
+CPP_OPTS  = $(INCLUDE) $(W_OPTS) -c
+CC_OPTS   = $(INCLUDE) $(W_OPTS) -c
+CC_OPTS_A = $(CC_OPTS) 
+
+LIB_PATH  = $(TOOLCHAIN)/lib
+LIBS      = -$(shell sdl-config --libs) -lpthread -lz -lpng -lm -lgcc -lstdc++
+
+LD_OPTS   = -L$(LIB_PATH) $(LIBS)
+
+# Find all source files
+
+SRC_CPP = $(foreach dir, $(SOURCE), $(wildcard $(dir)/*.cpp))
+SRC_C   = $(foreach dir, $(SOURCE), $(wildcard $(dir)/*.c))
+SRC_S   = $(foreach dir, $(SOURCE), $(wildcard $(dir)/*.S))
+OBJ_CPP = $(patsubst %.cpp, %.o, $(SRC_CPP))
+OBJ_C   = $(patsubst %.c, %.o, $(SRC_C))
+OBJ_S   = $(patsubst %.S, %.o, $(SRC_S))
+OBJ     = $(OBJ_CPP) $(OBJ_C) $(OBJ_S)
+
+# Compile rules.
+
+.PHONY : all
+
+all : $(APP_NAME).exe
+
+$(APP_NAME).exe : $(OBJ)
+	$(CC) $(OBJ) $(LD_OPTS) -o $@
+
+$(OBJ_CPP) : %.o : %.cpp
+	$(CPP) $(CPP_OPTS) -o $@ $<
+
+$(OBJ_C) : %.o : %.c
+	$(CC) $(CC_OPTS) -o $@ $<
+
+$(OBJ_S) : %.o : %.S
+	$(CC) $(CC_OPTS_A) -o $@ $<
+
+# Clean rules
+
+.PHONY : clean
+
+clean :
+	rm -f $(OBJ) $(APP_NAME).exe
+

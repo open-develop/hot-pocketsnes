@@ -24,7 +24,7 @@ static u32 mInputHeld=0;
 static u32 mInputRepeat=0;
 static u32 mInputIgnore=0;
 static u32 mInputRepeatTimer[32];
-static short mSoundBuffer[SOUND_BUFFER_COUNT][MAX_SOUND_LEN];
+//static short mSoundBuffer[SOUND_BUFFER_COUNT][MAX_SOUND_LEN];
 static u32 volatile mSb=0;
 static u32 mStereo=0;
 static u32 mCpuSpeed=133;
@@ -63,7 +63,7 @@ void sal_VideoBitmapScale(int startx, int starty, int viswidth, int visheight, i
   } while (--H);
 }
 
-void sal_VideoDrawRect8(s32 x, s32 y, s32 width, s32 height, u8 color)
+static void sal_VideoDrawRect8(s32 x, s32 y, s32 width, s32 height, u8 color)
 {
 	u8 *pixy = (u8*)sal_VideoGetBuffer();
 	u8 *pixx;
@@ -84,7 +84,7 @@ void sal_VideoDrawRect8(s32 x, s32 y, s32 width, s32 height, u8 color)
 	}
 }
 
-void sal_VideoDrawRect16(s32 x, s32 y, s32 width, s32 height, u16 color)
+static void sal_VideoDrawRect16(s32 x, s32 y, s32 width, s32 height, u16 color)
 {
 	u16 *pixy = (u16*)sal_VideoGetBuffer();
 	u16 *pixx;
@@ -111,7 +111,7 @@ void sal_VideoDrawRect(s32 x, s32 y, s32 width, s32 height, u32 color)
 	else sal_VideoDrawRect16(x,y,width,height,(u16)color);
 }
 
-void sal_VideoPrint8(s32 x,s32 y,s8 *buffer,u8 color)
+static void sal_VideoPrint8(s32 x,s32 y,s8 *buffer,u8 color)
 {
 	s32 m,b;
 	u8 *pix = (u8*)sal_VideoGetBuffer();
@@ -162,7 +162,7 @@ void sal_VideoPrint8(s32 x,s32 y,s8 *buffer,u8 color)
 	}
 }
 
-void sal_VideoPrint16(s32 x,s32 y,s8 *buffer,u16 color)
+static void sal_VideoPrint16(s32 x,s32 y,s8 *buffer,u16 color)
 {
 	s32 m,b;
 	u16 *pix = (u16*)sal_VideoGetBuffer();
@@ -314,6 +314,7 @@ u32 sal_VideoGetBpp()
 	return mBpp;
 }
 
+/*
 u32 sal_AudioGetCurrentBufferIndex()
 {
 	return mSb;
@@ -337,6 +338,7 @@ s16 *sal_AudioGetBuffer(u32 bufferIndex)
 {
 	return mSoundBuffer[bufferIndex];
 }
+*/
 
 u32 sal_AudioGetSampleCount()
 {
@@ -348,6 +350,7 @@ u32 sal_AudioGetBufferSize()
 	return mSoundBufferSize;
 }
 
+#if 0
 void sal_Sleep(u32 milliSecs)
 {
 	u32 timerStart=sal_TimerRead();
@@ -357,6 +360,7 @@ void sal_Sleep(u32 milliSecs)
 
 	}
 }
+#endif
 
 void sal_ZipGetFirstFilename(s8 *filename, s8 *longfilename)
 {
@@ -670,6 +674,21 @@ s32 sal_StringCompare(s8 *string1, s8 *string2)
 		i++;
 	}
 
+}
+
+const char * sal_DirectoryGetHome(void)
+{
+	static char home [SAL_MAX_PATH];
+
+	if (!home[0]) {
+		char *env_home = getenv("HOME");
+		strcpy(home, env_home);
+		sal_DirectoryCombine(home, ".snes96_snapshots");
+
+		/* Create the directory if it didn't already exist */
+		mkdir(home, 0755);
+	}
+	return home;
 }
 
 void sal_DirectorySplitFilename(s8 *wholeFilename, s8* path, s8 *filename, s8 *ext)

@@ -46,8 +46,9 @@ void DefaultMenuOptions(void)
 	mMenuOptions->cpuSpeed=336; 
 	mMenuOptions->country=0;
 	mMenuOptions->showFps=1;
-	mMenuOptions->soundRate=48000;
-	mMenuOptions->fullScreen=1;
+	mMenuOptions->soundRate=44100;
+	mMenuOptions->stereo=1;
+	mMenuOptions->fullScreen=0;
 	mMenuOptions->autoSaveSram=0;
 }
 
@@ -115,22 +116,21 @@ s32 MenuMessageBox(s8 *message1,s8 *message2,s8 *message3, enum MENU_MESSAGE_BOX
 {
   s32 select=0;
   s32 subaction=-1;
-  u32 keysRepeat=0,keysHeld=0;
+  u32 keys=0;
   
   sal_InputIgnore();
   while(subaction==-1)
   {
-     keysHeld=sal_InputPoll();
-	 keysRepeat=sal_InputRepeat();
-     if (keysRepeat&SAL_INPUT_UP) 
+     keys=sal_InputPollRepeat();
+     if (keys & SAL_INPUT_UP) 
      {
        select=SAL_OK; // Up
      }
-     if (keysRepeat&SAL_INPUT_DOWN) 
+     if (keys & SAL_INPUT_DOWN) 
      {
        select=SAL_ERROR; // Down
      }
-     if ((keysHeld&INP_BUTTON_MENU_SELECT) || (keysHeld&INP_BUTTON_MENU_CANCEL))
+     if ((keys&INP_BUTTON_MENU_SELECT) || (keys&INP_BUTTON_MENU_CANCEL))
      {
         subaction=select;
      }
@@ -203,6 +203,7 @@ void freeRomLists()
 {
 	//free rom list buffers
 	if(mRomList != NULL) free(mRomList);
+	mRomList = NULL;
 }
 
 void DefaultRomListItems()
@@ -415,7 +416,7 @@ s32 FileSelect()
 	s32 focus=ROM_SELECTOR_DEFAULT_FOCUS;
 	s32 menuExit=0;
 	s32 scanstart=0,scanend=0;
-	u32 keysRepeat=0,keysHeld=0;
+	u32 keys=0;
 	s32 size=0, check=SAL_OK;
 	
 	FileScan();
@@ -424,29 +425,31 @@ s32 FileSelect()
 	sal_InputIgnore();
 	while (menuExit==0)
 	{
-		keysHeld=sal_InputPoll();
-		keysRepeat=sal_InputRepeat();
+		keys=sal_InputPollRepeat();
 
 		// Change which rom is focused on:
-		if (keysRepeat&SAL_INPUT_UP)
+		if (keys & SAL_INPUT_UP)
 		{
 			focus--; // Up
 		}
-		if (keysRepeat&SAL_INPUT_DOWN)
+		if (keys & SAL_INPUT_DOWN)
 		{
 			focus++; // Down
 		}
 
-		if (keysHeld&INP_BUTTON_MENU_CANCEL) {action=0; menuExit=1;}
+		if (keys & INP_BUTTON_MENU_CANCEL) {
+			action=0;
+			menuExit=1;
+		}
    
-		if (keysRepeat&SAL_INPUT_LEFT || keysRepeat&SAL_INPUT_RIGHT)
+		if (keys & SAL_INPUT_LEFT || keys & SAL_INPUT_RIGHT)
 		{
-			if (keysRepeat&SAL_INPUT_LEFT) 
+			if (keys & SAL_INPUT_LEFT) 
 			{
 				focus-=12;
 				smooth=(focus<<8)-1;
 			}      
-			else if (keysRepeat&SAL_INPUT_RIGHT)
+			else if (keys & SAL_INPUT_RIGHT)
 			{
 				focus+=12;
 				smooth=(focus<<8)-1;
@@ -475,7 +478,7 @@ s32 FileSelect()
 			smooth=(focus<<8)-1;
 		}
 		
-		if (keysHeld&INP_BUTTON_MENU_SELECT)
+		if (keys&INP_BUTTON_MENU_SELECT)
 	    	{
 			switch(focus)
 			{
@@ -539,7 +542,7 @@ s32 FileSelect()
 			}
 	    	}
 
-		if (keysHeld&INP_BUTTON_MENU_DELETE)
+		if (keys&INP_BUTTON_MENU_DELETE)
 		{
 			if(focus>ROM_SELECTOR_DEFAULT_FOCUS)
 			{
@@ -605,6 +608,7 @@ s32 FileSelect()
 		sal_VideoPrint(0,228,mRomDir,SAL_RGB(0,0,0));
 
 		sal_VideoFlip(1);
+		usleep(10000);
 	}
 	sal_InputIgnore();
 
@@ -689,7 +693,7 @@ static s32 SaveStateSelect(s32 mode)
 	s8 text[128];
 	s32 action=11;
 	s32 saveno=0;
-	u32 keysRepeat=0,keysHeld=0;
+	u32 keys=0;
 	u16 *pixTo,*pixFrom;
 
 	if(mRomName[0]==0)
@@ -701,28 +705,28 @@ static s32 SaveStateSelect(s32 mode)
 	SaveStateMem();
 	ScanSaveStates(mRomName);
 	sal_InputIgnore();
+
 	while (action!=0&&action!=100)
 	{
-		keysHeld=sal_InputPoll();
-		keysRepeat=sal_InputRepeat();
+		keys=sal_InputPollRepeat();
 
-		if(keysRepeat&SAL_INPUT_UP) {saveno--; action=1;}
-		if(keysRepeat&SAL_INPUT_DOWN) {saveno++; action=1;}
+		if(keys&SAL_INPUT_UP) {saveno--; action=1;}
+		if(keys&SAL_INPUT_DOWN) {saveno++; action=1;}
 		if(saveno<-1) saveno=9;
 		if(saveno>9) saveno=-1;
 	      
-		if(keysHeld&INP_BUTTON_MENU_CANCEL) action=0; // exit
-		else if((keysHeld&INP_BUTTON_MENU_SELECT)&&(saveno==-1)) action=0; // exit
-		else if((keysHeld&INP_BUTTON_MENU_SELECT)&&(mode==0)&&((action==2)||(action==5))) action=6;  // pre-save mode
-		else if((keysHeld&INP_BUTTON_MENU_SELECT)&&(mode==1)&&(action==5)) action=8;  // pre-load mode
-		else if((keysHeld&INP_BUTTON_MENU_SELECT)&&(mode==2)&&(action==5))
+		if(keys&INP_BUTTON_MENU_CANCEL) action=0; // exit
+		else if((keys&INP_BUTTON_MENU_SELECT)&&(saveno==-1)) action=0; // exit
+		else if((keys&INP_BUTTON_MENU_SELECT)&&(mode==0)&&((action==2)||(action==5))) action=6;  // pre-save mode
+		else if((keys&INP_BUTTON_MENU_SELECT)&&(mode==1)&&(action==5)) action=8;  // pre-load mode
+		else if((keys&INP_BUTTON_MENU_SELECT)&&(mode==2)&&(action==5))
 		{
 			if(MenuMessageBox("Are you sure you want to delete","this save?","",MENU_MESSAGE_BOX_MODE_YESNO)==SAL_OK) action=13;  //delete slot with no preview
 		}
-		else if((keysHeld&INP_BUTTON_MENU_PREVIEW_SAVESTATE)&&(action==12)) action=3;  // preview slot mode
-		else if((keysHeld&INP_BUTTON_MENU_SELECT)&&(mode==1)&&(action==12)) action=8;  //load slot with no preview
-		else if((keysHeld&INP_BUTTON_MENU_SELECT)&&(mode==0)&&(action==12)) action=6;  //save slot with no preview
-		else if((keysHeld&INP_BUTTON_MENU_SELECT)&&(mode==2)&&(action==12))
+		else if((keys&INP_BUTTON_MENU_PREVIEW_SAVESTATE)&&(action==12)) action=3;  // preview slot mode
+		else if((keys&INP_BUTTON_MENU_SELECT)&&(mode==1)&&(action==12)) action=8;  //load slot with no preview
+		else if((keys&INP_BUTTON_MENU_SELECT)&&(mode==0)&&(action==12)) action=6;  //save slot with no preview
+		else if((keys&INP_BUTTON_MENU_SELECT)&&(mode==2)&&(action==12))
 		{
 			if(MenuMessageBox("Are you sure you want to delete","this save?","",MENU_MESSAGE_BOX_MODE_YESNO)==SAL_OK) action=13;  //delete slot with no preview
 		}
@@ -844,6 +848,8 @@ static s32 SaveStateSelect(s32 mode)
 				action=1;
 				break;
 		}
+
+		usleep(10000);
 	}
 	if (action!=100)
 	{
@@ -895,7 +901,7 @@ s32 SaveStateMenu(void)
 	s32 menuExit=0,menuCount=SAVESTATE_MENU_COUNT,menufocus=0,menuSmooth=0;
 	s32 action=0;
 	s32 subaction=0;
-	u32 keysRepeat=0,keysHeld=0;
+	u32 keys=0;
 
 	//Update
 	strcpy(mMenuText[SAVESTATE_MENU_LOAD],"Load State");
@@ -903,6 +909,7 @@ s32 SaveStateMenu(void)
 	strcpy(mMenuText[SAVESTATE_MENU_DELETE],"Delete State");
 	strcpy(mMenuText[SAVESTATE_MENU_RETURN],"Back");
 	sal_InputIgnore();
+
 	while (!menuExit)
 	{
 		// Draw screen:
@@ -910,14 +917,13 @@ s32 SaveStateMenu(void)
 		RenderMenu("Save States", menuCount,menuSmooth,menufocus);
 		sal_VideoFlip(1);
 
-		keysHeld=sal_InputPoll();
-		keysRepeat=sal_InputRepeat();
+		keys=sal_InputPollRepeat();
 
 		// Change which rom is focused on:
-		if (keysRepeat&SAL_INPUT_UP) menufocus--; // Up
-		if (keysRepeat&SAL_INPUT_DOWN) menufocus++; // Down
+		if (keys & SAL_INPUT_UP) menufocus--; // Up
+		if (keys & SAL_INPUT_DOWN) menufocus++; // Down
     
-		if (keysHeld&INP_BUTTON_MENU_CANCEL) menuExit=1;
+		if (keys&INP_BUTTON_MENU_CANCEL) menuExit=1;
     
 		if (menufocus>menuCount-1)
 		{
@@ -930,7 +936,7 @@ s32 SaveStateMenu(void)
 			menuSmooth=(menufocus<<8)-1;
 		}
 
-		if (keysHeld&INP_BUTTON_MENU_SELECT)
+		if (keys&INP_BUTTON_MENU_SELECT)
 		{
 			switch(menufocus)
 			{
@@ -953,8 +959,8 @@ s32 SaveStateMenu(void)
 					break;
 			}	
 		}
-		
-       
+
+		usleep(10000);
 	}
   sal_InputIgnore();
   return action;
@@ -962,30 +968,25 @@ s32 SaveStateMenu(void)
 
 void ShowCredits()
 {
-	s32 menuExit=0,menuCount=9,menufocus=0,menuSmooth=0;
-	u32 keysRepeat=0,keysHeld=0;
+	s32 menuExit=0,menuCount=5,menufocus=0,menuSmooth=0;
+	u32 keys=0;
 
-	strcpy(mMenuText[0],"Credits");
+	strcpy(mMenuText[0],"PocketSNES - built " __DATE__);
 	strcpy(mMenuText[1],"-------------------------------------");
 	strcpy(mMenuText[2],"PocketSNES created by Scott Ramsby");
-	strcpy(mMenuText[3],"Ported to the Dingoo by Reesy");
-	strcpy(mMenuText[4],"-------------------------------------");
-	strcpy(mMenuText[5],"Special thanks to Flatmush and Hartex");
-	strcpy(mMenuText[6],"who created the Dingoo SDK without ");
-	strcpy(mMenuText[7],"which this port would not have been ");
-	strcpy(mMenuText[8],"possible!");
+	strcpy(mMenuText[3],"Initial port to the Dingoo by Reesy");
+	strcpy(mMenuText[4],"Ported to OpenDingux by Ayla");
 
 	sal_InputIgnore();
 	while (!menuExit)
 	{
-		keysHeld=sal_InputPoll();
-		keysRepeat=sal_InputRepeat();
+		keys=sal_InputPollRepeat();
 
-		if (keysRepeat&SAL_INPUT_UP) menufocus--; // Up
-		if (keysRepeat&SAL_INPUT_DOWN) menufocus++; // Down
+		if (keys & SAL_INPUT_UP) menufocus--; // Up
+		if (keys & SAL_INPUT_DOWN) menufocus++; // Down
 
     
-		if (keysHeld&INP_BUTTON_MENU_CANCEL) menuExit=1;
+		if (keys&INP_BUTTON_MENU_CANCEL) menuExit=1;
     
 		if (menufocus>menuCount-1)
 		{
@@ -1002,6 +1003,7 @@ void ShowCredits()
 		menuSmooth=menuSmooth*7+(menufocus<<8); menuSmooth>>=3;
 		RenderMenu("Credits", menuCount,menuSmooth,menufocus);
 		sal_VideoFlip(1);
+		usleep(10000);
 	}
   	sal_InputIgnore();
 }
@@ -1032,45 +1034,34 @@ void MainMenuUpdateText(s32 menu_index)
 			break;
 
 		case MENU_AUTO_SAVE_SRAM:
-			switch(mMenuOptions->autoSaveSram)
-			{
-			case 0:
-				strcpy(mMenuText[MENU_AUTO_SAVE_SRAM],"Auto Save SRAM:             OFF");
-				break;
-			case 1:
-				strcpy(mMenuText[MENU_AUTO_SAVE_SRAM],"Auto Save SRAM:             ON");
-				break;
-			}
+			sprintf(mMenuText[MENU_AUTO_SAVE_SRAM],
+						"Auto Save SRAM:             %s",
+						mMenuOptions->autoSaveSram ? "ON" : "OFF");
 			break;
 
 		case MENU_TRANSPARENCY:
-			switch(mMenuOptions->transparency)
-			{
-			case 0:
-				strcpy(mMenuText[MENU_TRANSPARENCY],"Transparency:               OFF");
-				break;
-			case 1:
-				strcpy(mMenuText[MENU_TRANSPARENCY],"Transparency:               ON");
-				break;
-			}
+			sprintf(mMenuText[MENU_TRANSPARENCY],
+						"Transparency:               %s",
+						mMenuOptions->transparency ? "ON" : "OFF");
 			break;
 
 		case MENU_SOUND_ON:
-			switch(mMenuOptions->soundEnabled)
-			{
-			case 0:
-				strcpy(mMenuText[MENU_SOUND_ON],"Sound:                      OFF");
-				break;
-			case 1:
-				strcpy(mMenuText[MENU_SOUND_ON],"Sound:                      ON");
-				break;
-			}
+			sprintf(mMenuText[MENU_SOUND_ON],
+						"Sound:                      %s",
+						mMenuOptions->soundEnabled ? "ON" : "OFF");
 			break;
 		
 		case MENU_SOUND_RATE:		
 			sprintf(mMenuText[MENU_SOUND_RATE],"Sound Rate:                 %d",mMenuOptions->soundRate);
 			break;
 
+		case MENU_SOUND_STEREO:
+			sprintf(mMenuText[MENU_SOUND_STEREO],
+						"Stereo:                     %s",
+						mMenuOptions->stereo ? "ON" : "OFF");
+			break;
+
+#if 0
 		case MENU_CPU_SPEED:		
 			sprintf(mMenuText[MENU_CPU_SPEED],"Cpu Speed:                  %d",mMenuOptions->cpuSpeed);
 			break;
@@ -1078,6 +1069,7 @@ void MainMenuUpdateText(s32 menu_index)
 		case MENU_SOUND_VOL:
 			sprintf(mMenuText[MENU_SOUND_VOL],"Volume:                     %d",mMenuOptions->volume);
 			break;
+#endif
 		
 		case MENU_FRAMESKIP: 
 			switch(mMenuOptions->frameSkip)
@@ -1092,18 +1084,12 @@ void MainMenuUpdateText(s32 menu_index)
 			break;
 
 		case MENU_FPS:
-			switch(mMenuOptions->showFps)
-			{
-				case 0:
-					strcpy(mMenuText[MENU_FPS],"Show FPS:                   OFF");
-
-					break;
-				case 1:
-					strcpy(mMenuText[MENU_FPS],"Show FPS:                   ON");
-					break;
-			}
+			sprintf(mMenuText[MENU_FPS],
+						"Show FPS:                   %s",
+						mMenuOptions->showFps ? "ON" : "OFF");
 			break;
 
+#if 0
 		case MENU_FULLSCREEN:
 			switch(mMenuOptions->fullScreen)
 			{
@@ -1115,6 +1101,7 @@ void MainMenuUpdateText(s32 menu_index)
 					break;  
 			}
 			break;
+#endif
 			
 		case MENU_LOAD_GLOBAL_SETTINGS:
 			strcpy(mMenuText[MENU_LOAD_GLOBAL_SETTINGS],"Load Global Settings");
@@ -1154,13 +1141,14 @@ void MainMenuUpdateTextAll(void)
 	MainMenuUpdateText(MENU_EXIT_APP);
 	MainMenuUpdateText(MENU_RETURN);
 	MainMenuUpdateText(MENU_TRANSPARENCY);
-	MainMenuUpdateText(MENU_CPU_SPEED);
+//	MainMenuUpdateText(MENU_CPU_SPEED);
 	MainMenuUpdateText(MENU_SOUND_ON);
+	MainMenuUpdateText(MENU_SOUND_STEREO);
 	MainMenuUpdateText(MENU_SOUND_RATE);
-	MainMenuUpdateText(MENU_SOUND_VOL);
+//	MainMenuUpdateText(MENU_SOUND_VOL);
 	MainMenuUpdateText(MENU_FRAMESKIP);
 	MainMenuUpdateText(MENU_FPS);
-	MainMenuUpdateText(MENU_FULLSCREEN);
+//	MainMenuUpdateText(MENU_FULLSCREEN);
 	MainMenuUpdateText(MENU_LOAD_GLOBAL_SETTINGS);
 	MainMenuUpdateText(MENU_SAVE_GLOBAL_SETTINGS);
 	MainMenuUpdateText(MENU_LOAD_CURRENT_SETTINGS);
@@ -1247,7 +1235,7 @@ s32 MenuRun(s8 *romName)
 	s32 menuExit=0,menuCount=MENU_COUNT,menufocus=0,menuSmooth=0;
 	s32 action=EVENT_NONE;
 	s32 subaction=0;
-	u32 keysRepeat=0,keysHeld=0;
+	u32 keys=0;
 
 	sal_CpuSpeedSet(MENU_NORMAL_CPU_SPEED);
 
@@ -1277,13 +1265,12 @@ s32 MenuRun(s8 *romName)
 		RenderMenu("Main Menu", menuCount,menuSmooth,menufocus);
 		sal_VideoFlip(1);
 
-		keysHeld=sal_InputPoll();
-		keysRepeat=sal_InputRepeat();
+		keys=sal_InputPollRepeat();
 
-		if (keysRepeat&SAL_INPUT_UP) menufocus--; // Up
-		if (keysRepeat&SAL_INPUT_DOWN) menufocus++; // Down
+		if (keys & SAL_INPUT_UP) menufocus--; // Up
+		if (keys & SAL_INPUT_DOWN) menufocus++; // Down
     
-		if (keysHeld&INP_BUTTON_MENU_CANCEL) 
+		if (keys&INP_BUTTON_MENU_CANCEL) 
 		{
 			if(mRomName[0]!=0)
 			{
@@ -1303,14 +1290,19 @@ s32 MenuRun(s8 *romName)
 			menuSmooth=(menufocus<<8)-1;
 		}
 
-		if (keysRepeat&SAL_INPUT_LEFT||
-			keysRepeat&SAL_INPUT_RIGHT)
+		if (keys & SAL_INPUT_LEFT||
+			keys & SAL_INPUT_RIGHT)
 		{
 			switch(menufocus)
 			{
 				case MENU_SOUND_ON:
 					mMenuOptions->soundEnabled^=1;
 					MainMenuUpdateText(MENU_SOUND_ON);
+					break;
+
+				case MENU_SOUND_STEREO:
+					mMenuOptions->stereo^=1;
+					MainMenuUpdateText(MENU_SOUND_STEREO);
 					break;
 
 				case MENU_TRANSPARENCY:
@@ -1323,11 +1315,12 @@ s32 MenuRun(s8 *romName)
 					MainMenuUpdateText(MENU_AUTO_SAVE_SRAM);
 					break;
 
+#if 0
 				case MENU_CPU_SPEED:
 					
-					if (keysRepeat&SAL_INPUT_RIGHT)
+					if (keys & SAL_INPUT_RIGHT)
 					{
-						if(keysHeld&INP_BUTTON_MENU_SELECT)
+						if(keys&INP_BUTTON_MENU_SELECT)
 						{
 							mMenuOptions->cpuSpeed=sal_CpuSpeedNextFast(mMenuOptions->cpuSpeed);
 						}
@@ -1338,7 +1331,7 @@ s32 MenuRun(s8 *romName)
 					}
 					else
 					{
-						if(keysHeld&INP_BUTTON_MENU_SELECT)
+						if(keys&INP_BUTTON_MENU_SELECT)
 						{
 							mMenuOptions->cpuSpeed=sal_CpuSpeedPreviousFast(mMenuOptions->cpuSpeed);
 						}
@@ -1349,9 +1342,10 @@ s32 MenuRun(s8 *romName)
 					}
 					MainMenuUpdateText(MENU_CPU_SPEED);
 					break;
+#endif
 
 				case MENU_SOUND_RATE:
-					if (keysRepeat&SAL_INPUT_RIGHT)
+					if (keys & SAL_INPUT_RIGHT)
 					{
 						mMenuOptions->soundRate=sal_AudioRateNext(mMenuOptions->soundRate);	
 					}
@@ -1362,8 +1356,9 @@ s32 MenuRun(s8 *romName)
 					MainMenuUpdateText(MENU_SOUND_RATE);
 					break;
 
+#if 0
 				case MENU_SOUND_VOL:
-					if (keysRepeat&SAL_INPUT_RIGHT)
+					if (keys & SAL_INPUT_RIGHT)
 					{
 						mMenuOptions->volume+=1;
 						if(mMenuOptions->volume>31) mMenuOptions->volume=0;
@@ -1376,9 +1371,10 @@ s32 MenuRun(s8 *romName)
 					}
 					MainMenuUpdateText(MENU_SOUND_VOL);
 					break;
+#endif
 
 				case MENU_FRAMESKIP:
-					if (keysRepeat&SAL_INPUT_RIGHT)
+					if (keys & SAL_INPUT_RIGHT)
 					{
 						mMenuOptions->frameSkip++;
 						if(mMenuOptions->frameSkip>6) mMenuOptions->frameSkip=0;
@@ -1396,14 +1392,16 @@ s32 MenuRun(s8 *romName)
 					MainMenuUpdateText(MENU_FPS);
 					break;
 
+#if 0
 				case MENU_FULLSCREEN:
 					mMenuOptions->fullScreen^=1;
 					MainMenuUpdateText(MENU_FULLSCREEN);
 					break;
+#endif
 			}
 		}
 
-		if (keysHeld&INP_BUTTON_MENU_SELECT)
+		if (keys&INP_BUTTON_MENU_SELECT)
 		{
 			switch(menufocus)
 			{
@@ -1413,7 +1411,7 @@ s32 MenuRun(s8 *romName)
 					{
 						action=EVENT_LOAD_ROM;
 						strcpy(romName,mRomName);
-						MenuReloadOptions();
+//						MenuReloadOptions();
 						menuExit=1;
 					}
 					break;
@@ -1495,7 +1493,7 @@ s32 MenuRun(s8 *romName)
 			}	
 		}
 
-		
+		usleep(10000);
 	}
 	
   sal_InputIgnore();

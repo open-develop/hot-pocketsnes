@@ -130,14 +130,14 @@ bool8_32 S9xDeinitUpdate (int Width, int Height, bool8_32)
 	{
 		mFps++;
 		newTimer=sal_TimerRead();
-		if(newTimer-mLastTimer>60)
+		if(newTimer-mLastTimer>Memory.ROMFramesPerSecond)
 		{
 			mLastTimer=newTimer;
-			sprintf(mFpsDisplay,"FPS: %d",mFps);
+			sprintf(mFpsDisplay,"FPS: %d / %d", mFps, Memory.ROMFramesPerSecond);
 			mFps=0;
 		}
 		
-		sal_VideoDrawRect(0,0,8*8,8,SAL_RGB(0,0,0));
+		sal_VideoDrawRect(0,0,13*8,8,SAL_RGB(0,0,0));
 		sal_VideoPrint(0,0,mFpsDisplay,SAL_RGB(31,31,31));
 	}
 
@@ -158,15 +158,16 @@ bool8_32 S9xDeinitUpdate (int Width, int Height, bool8_32)
 
 const char *S9xGetFilename (const char *ex)
 {
-      	char dir [SAL_MAX_PATH];
-      	char fname [SAL_MAX_PATH];
-      	char ext [SAL_MAX_PATH];
+	static char dir [SAL_MAX_PATH];
+	char fname [SAL_MAX_PATH];
+	char ext [SAL_MAX_PATH];
 
 	sal_DirectorySplitFilename(Memory.ROMFilename, dir, fname, ext);
+	strcpy(dir, sal_DirectoryGetHome());
 	sal_DirectoryCombine(dir,fname);
-      	strcat (dir, ex);
+	strcat (dir, ex);
 
-      	return (dir);
+	return (dir);
 }
 
 static u8 *mTempState=NULL;
@@ -247,6 +248,7 @@ uint32 S9xReadJoypad (int which1)
 		return val;
 	}
 
+#if 0
 	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_UP))
 	{
 		if(mVolumeTimer==0)
@@ -274,6 +276,7 @@ uint32 S9xReadJoypad (int which1)
 		}
 		return val;
 	}
+#endif
 
 	if (joy & SAL_INPUT_Y) val |= SNES_Y_MASK;
 	if (joy & SAL_INPUT_A) val |= SNES_A_MASK;
@@ -348,6 +351,7 @@ void S9xSaveSRAM (int showWarning)
 	{
 		MenuMessageBox("Saving SRAM...Ignored!","No changes have been made to SRAM","So there is nothing to save!",MENU_MESSAGE_BOX_MODE_MSG);
 	}
+	sleep(1);
 }
 
 
@@ -373,115 +377,85 @@ void S9xLoadSRAM (void)
 }
 
 static
-int RunSound()
+int Run(int sound)
 {
   	int skip=0, done=0, doneLast=0,aim=0,i;
-
-	sal_AudioInit(mMenuOptions.soundRate, 16, 1, 60);
-	Settings.APUEnabled = 1;
-	Settings.NextAPUEnabled = Settings.APUEnabled;					
-	Settings.SoundPlaybackRate=mMenuOptions.soundRate;
-	Settings.SixteenBitSound=true;
-	Settings.Stereo=1;
-	S9xInitSound (mMenuOptions.soundRate,1,sal_AudioGetBufferSize());
-	S9xSetPlaybackRate(mMenuOptions.soundRate);
-	S9xSetSoundMute (FALSE);
-  	while(!mEnterMenu) 
-  	{
-		for (i=0;i<10;i++)
-		{
-			aim=sal_AudioGetPrevBufferIndex();
-			if (done!=aim)
-			{
-				doneLast=done;
-				done=sal_AudioGetNextBufferIndex(done);
-				if(mMenuOptions.frameSkip==0) //Auto
-				{
-					if(done==aim) IPPU.RenderThisFrame=TRUE; // Render last frame
-					else          IPPU.RenderThisFrame=FALSE; // lagged behind, so skip
-
-				}
-				else
-				{
-					skip--;
-					if(skip<=0)
-					{
-						IPPU.RenderThisFrame=TRUE;
-						skip=mMenuOptions.frameSkip;
-					}
-					else
-					{
-						IPPU.RenderThisFrame=FALSE;
-					}
-				}
-		
-				//Run SNES for one glorious frame
-		    		S9xMainLoop ();
-				S9xMixSamples((uint8*)sal_AudioGetBuffer(doneLast), sal_AudioGetSampleCount());
-				HandleQuickStateRequests();
-				
-			}
-			if (done==aim) break; // Up to date now
-			if (mEnterMenu) break;
-		}
-		done=aim; // Make sure up to date
-  	}
-
-	sal_AudioClose();
-	mEnterMenu=0;
-	return mEnterMenu;
-
-}
-
-static
-int RunNoSound()
-{
-  	int skip=0, done=0, doneLast=0,aim=0,i;
-	Settings.APUEnabled = 0;
-	Settings.NextAPUEnabled = Settings.APUEnabled;					
-	S9xSetSoundMute (TRUE);
-	sal_TimerInit(60);
+	Settings.NextAPUEnabled = Settings.APUEnabled = sound;
+	sal_TimerInit(Settings.FrameTime);
 	done=sal_TimerRead()-1;
+	uint8 *soundbuf;
+
+	if (sound) {
+		/*
+		Settings.SoundPlaybackRate = mMenuOptions.soundRate;
+		Settings.Stereo = mMenuOptions.stereo ? TRUE : FALSE;
+		*/
+		Settings.SixteenBitSound=true;
+
+		sal_AudioInit(mMenuOptions.soundRate, 16,
+					mMenuOptions.stereo, Memory.ROMFramesPerSecond);
+
+		S9xInitSound (mMenuOptions.soundRate,
+					mMenuOptions.stereo, sal_AudioGetBufferSize());
+		S9xSetPlaybackRate(mMenuOptions.soundRate);
+		S9xSetSoundMute (FALSE);
+
+		soundbuf = (uint8*) calloc(1, sal_AudioGetBufferSize());
+		if (!soundbuf) {
+			printf("Malloc failed.\n");
+		}
+
+	} else {
+		S9xSetSoundMute (TRUE);
+	}
+
   	while(!mEnterMenu) 
   	{
 		for (i=0;i<10;i++)
 		{
 			aim=sal_TimerRead();
-			if (done!=aim)
+			if (done < aim)
 			{
 				done++;
-				if(mMenuOptions.frameSkip==0) //Auto
-				{
-					if(done==aim) IPPU.RenderThisFrame=TRUE; // Render last frame
-					else          IPPU.RenderThisFrame=FALSE; // lagged behind, so skip
+				if (mMenuOptions.frameSkip == 0) //Auto
+					IPPU.RenderThisFrame = (done >= aim);
+				else if (IPPU.RenderThisFrame = (--skip <= 0))
+					skip = mMenuOptions.frameSkip;
 
-				}
-				else
-				{
-					skip--;
-					if(skip<=0)
-					{
-						IPPU.RenderThisFrame=TRUE;
-						skip=mMenuOptions.frameSkip;
-					}
-					else
-					{
-						IPPU.RenderThisFrame=FALSE;
-					}
-				}
-		
 				//Run SNES for one glorious frame
-		    		S9xMainLoop ();
-				HandleQuickStateRequests();
+				S9xMainLoop ();
+
+				if (sound) {
+					S9xMixSamples(soundbuf, sal_AudioGetSampleCount());
+					sal_SubmitSamples(soundbuf, sal_AudioGetBufferSize());
+				}
+//				HandleQuickStateRequests();
 			}
-			if (done==aim) break; // Up to date now
+			if (done>=aim) break; // Up to date now
 			if (mEnterMenu) break;
 		}
 		done=aim; // Make sure up to date
+		HandleQuickStateRequests();
   	}
+
+	if (sound) {
+		free(soundbuf);
+		sal_AudioClose();
+	}
+
 	mEnterMenu=0;
 	return mEnterMenu;
 
+}
+
+static inline int RunSound(void)
+{
+	return Run(1);
+}
+
+static inline int RunNoSound(void)
+{
+	return Run(0);
 }
 
 static 
@@ -513,12 +487,12 @@ int SnesInit()
 	ZeroMemory (&Settings, sizeof (Settings));
 
 	Settings.JoystickEnabled = FALSE;
-	Settings.SoundPlaybackRate = 22050;
-	Settings.Stereo = FALSE;
+	Settings.SoundPlaybackRate = 44100;
+	Settings.Stereo = TRUE;
 	Settings.SoundBufferSize = 0;
 	Settings.CyclesPercentage = 100;
 	Settings.DisableSoundEcho = FALSE;
-	Settings.APUEnabled = FALSE;
+	Settings.APUEnabled = TRUE;
 	Settings.H_Max = SNES_CYCLES_PER_SCANLINE;
 	Settings.SkipFrames = AUTO_FRAMERATE;
 	Settings.Shutdown = Settings.ShutdownMaster = TRUE;
@@ -526,7 +500,7 @@ int SnesInit()
 	Settings.FrameTimeNTSC = 16667;
 	Settings.FrameTime = Settings.FrameTimeNTSC;
 	Settings.DisableSampleCaching = FALSE;
-	Settings.DisableMasterVolume = FALSE;
+	Settings.DisableMasterVolume = TRUE;
 	Settings.Mouse = FALSE;
 	Settings.SuperScope = FALSE;
 	Settings.MultiPlayer5 = FALSE;
@@ -534,14 +508,14 @@ int SnesInit()
 	Settings.ControllerOption = 0;
 	
 	Settings.ForceTransparency = FALSE;
-	Settings.Transparency = FALSE;
+	Settings.Transparency = TRUE;
 	Settings.SixteenBit = TRUE;
 	
 	Settings.SupportHiRes = FALSE;
 	Settings.NetPlay = FALSE;
 	Settings.ServerName [0] = 0;
 	Settings.AutoSaveDelay = 30;
-	Settings.ApplyCheats = FALSE;
+	Settings.ApplyCheats = TRUE;
 	Settings.TurboMode = FALSE;
 	Settings.TurboSkipFrames = 15;
 	Settings.ThreadSound = FALSE;
@@ -657,21 +631,13 @@ int mainEntry(int argc, char* argv[])
 	s32 event=EVENT_NONE;
 
 	sal_Init();
-	sal_VideoInit(16,SAL_RGB(0,0,0),60);
+	sal_VideoInit(16,SAL_RGB(0,0,0),Memory.ROMFramesPerSecond);
 
+	mRomName[0]=0;
 	if (argc >= 2) 
-	{
-		//Record ROM name
- 		strcpy(mRomName, argv[1]);
-		strcpy(mSystemDir,"a:\\game\\pocketsnes");
-	}
-	else
-	{
-		//ensure rom name is cleared
-		mRomName[0]=0;
-		sal_DirectoryGetCurrent(mSystemDir,SAL_MAX_PATH);
-	}
+ 		strcpy(mRomName, argv[1]); // Record ROM name
 
+	sal_DirectoryGetCurrent(mSystemDir,SAL_MAX_PATH);
 	MenuInit(mSystemDir,&mMenuOptions);
 
 
@@ -722,6 +688,9 @@ int mainEntry(int argc, char* argv[])
 			sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
 			sal_CpuSpeedSet(mMenuOptions.cpuSpeed);	
 			sal_VideoClear(0);
+			sal_VideoFlip(1);
+			sal_VideoClear(0);
+			sal_VideoFlip(1);
 			if(mMenuOptions.soundEnabled) 	
 				RunSound();
 			else	RunNoSound();

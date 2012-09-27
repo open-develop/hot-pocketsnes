@@ -4,32 +4,52 @@
 APP_NAME = pocketsnes
 
 # Define the compiler settings here:
-TOOLCHAIN = /usr
+TOOLCHAIN = /opt/opendingux-toolchain/usr
 
-CPP       = $(TOOLCHAIN)/bin/g++
-CC        = $(TOOLCHAIN)/bin/gcc
-LD        = $(TOOLCHAIN)/bin/ld
+CPP       = $(TOOLCHAIN)/bin/mipsel-linux-gcc
+CC        = $(TOOLCHAIN)/bin/mipsel-linux-gcc
+LD        = $(TOOLCHAIN)/bin/mipsel-linux-ld
 
 SOURCE    = ./snes9x ./menu ../sal/linux ../sal/common
 
 INCLUDE   = -I$(TOOLCHAIN)/include \
 		-I$(TOOLCHAIN)/include/zlib \
-		-I$(TOOLCHAIN)/include/SDL \
 		-I . \
 		-I ../sal/linux -I ../sal/linux/include \
 		-I ../sal/common -I ../sal/common/includes \
+		-I$(TOOLCHAIN)/include/SDL \
 		-I ./snes9x_included \
 		-I ./menu -I ./linux -I ./snes9x -I ./snes9x_include -I$ 
 
-W_OPTS    = -g -O3 $(shell sdl-config --cflags) -D__LINUX__
-CPP_OPTS  = $(INCLUDE) $(W_OPTS) -c
-CC_OPTS   = $(INCLUDE) $(W_OPTS) -c
+# General optimizations
+OPTIMIZE = -O2 -fomit-frame-pointer -ffunction-sections -fsingle-precision-constant #-ffast-math \
+		   #-flto -fwhole-program
+
+# MIPS32 specific optimizations
+OPTIMIZE += -G0 -mbranch-likely
+
+# C++ specific optimizations
+OPTIMIZE += -fno-exceptions -fno-rtti
+
+# Profiling
+OPTIMIZE += -fprofile-use #generate=/boot/pocketsnes
+
+#OPTIMIZE = -O3 -march=mips32 -mtune=mips32r2 -fomit-frame-pointer -fsigned-char -ffast-math -G0 -mno-mips16 \
+		   -mbranch-likely -pipe -falign-functions -falign-loops -falign-labels -falign-jumps -finline \
+		   -finline-functions -fpeel-loops \
+		   -fstrict-aliasing -fsingle-precision-constant -fno-exceptions -ffunction-sections
+
+#W_OPTS    = -g -O3 -D__LINUX__ -D__DINGUX__
+W_OPTS    = -g $(OPTIMIZE) $(shell sdl-config --cflags) -D__LINUX__ -D__DINGUX__ -pipe -fsigned-char
+CPP_OPTS  = $(INCLUDE) $(W_OPTS)
+CC_OPTS   = $(INCLUDE) $(W_OPTS)
 CC_OPTS_A = $(CC_OPTS) 
 
 LIB_PATH  = $(TOOLCHAIN)/lib
-LIBS      = -$(shell sdl-config --libs) -lpthread -lz -lpng -lm -lgcc -lstdc++
+#LIBS      = -lpthread -lz -lpng -lm -lgcc -lstdc++
+LIBS      = $(shell sdl-config --libs) -lpthread -lz -lpng -lao -lm -lgcc -lstdc++
 
-LD_OPTS   = -L$(LIB_PATH) $(LIBS)
+LD_OPTS   = $(W_OPTS) -L$(LIB_PATH) $(LIBS) -Wl,--gc-sections -Wl,-s
 
 # Find all source files
 
@@ -45,24 +65,24 @@ OBJ     = $(OBJ_CPP) $(OBJ_C) $(OBJ_S)
 
 .PHONY : all
 
-all : $(APP_NAME).exe
+all : $(APP_NAME).dge
 
-$(APP_NAME).exe : $(OBJ)
-	$(CC) $(OBJ) $(LD_OPTS) -o $@
+$(APP_NAME).dge : $(OBJ)
+	$(CC) $(CC_OPTS) $(LD_OPTS) $(OBJ) -o $@
 
 $(OBJ_CPP) : %.o : %.cpp
-	$(CPP) $(CPP_OPTS) -o $@ $<
+	$(CPP) $(CPP_OPTS) -c -o $@ $<
 
 $(OBJ_C) : %.o : %.c
-	$(CC) $(CC_OPTS) -o $@ $<
+	$(CC) $(CC_OPTS) -c -o $@ $<
 
 $(OBJ_S) : %.o : %.S
-	$(CC) $(CC_OPTS_A) -o $@ $<
+	$(CC) $(CC_OPTS_A) -c -o $@ $<
 
 # Clean rules
 
 .PHONY : clean
 
 clean :
-	rm -f $(OBJ) $(APP_NAME).exe
+	rm -f $(OBJ) $(APP_NAME).dge
 

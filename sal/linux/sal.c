@@ -8,12 +8,14 @@
 #include "unzip.h"
 #include "zip.h"
 
+#include <SDL/SDL.h>
+
 #define SAL_FRAME_BUFFER_COUNT	4
 #define SOUND_BUFFER_COUNT 	4
 #define CPU_SPEED_COUNT		0
 #define AUDIO_RATE_COUNT	5
 #define PALETTE_BUFFER_LENGTH	256*2*4
-#define MAX_SOUND_LEN 	((48000/60)*2)
+#define MAX_SOUND_LEN 	((48000/60)*2*2)
 
 static SDL_Surface *mScreen = NULL;
 static u32 mSoundSampleCount=0;
@@ -31,8 +33,46 @@ s32 mCpuSpeedLookup[1]={0};
 
 #include "sal_common.c"
 
-u32 sal_InputPoll()
+#define CASE(sym, key) \
+  case SDLK_##sym: \
+	inputHeld &= ~(SAL_INPUT_##key); \
+	inputHeld |= type << SAL_INPUT_INDEX_##key; \
+	break
+
+static u32 inputHeld = 0;
+
+static u32 sal_Input(int held)
 {
+#if 1
+	SDL_Event event;
+	int i=0;
+	u32 timer=0;
+
+	if (!SDL_PollEvent(&event)) {
+		if (held)
+			return inputHeld;
+		return 0;
+	}
+
+	Uint8 type = (event.key.state == SDL_PRESSED);
+	switch(event.key.keysym.sym) {
+		CASE(LCTRL, A);
+		CASE(LALT, B);
+		CASE(SPACE, X);
+		CASE(LSHIFT, Y);
+		CASE(TAB, L);
+		CASE(BACKSPACE, R);
+		CASE(RETURN, START);
+		CASE(ESCAPE, SELECT);
+		CASE(UP, UP);
+		CASE(DOWN, DOWN);
+		CASE(LEFT, LEFT);
+		CASE(RIGHT, RIGHT);
+	}
+
+	mInputRepeat = inputHeld;
+
+#else
 	int i=0;
 	u32 inputHeld=0;
 	u32 timer=0;
@@ -42,14 +82,14 @@ u32 sal_InputPoll()
 
 	keystate = SDL_GetKeyState(NULL);
 	
-	if ( keystate[SDLK_z] ) inputHeld|=SAL_INPUT_A;
-	if ( keystate[SDLK_x] ) inputHeld|=SAL_INPUT_B;
-	if ( keystate[SDLK_a] ) inputHeld|=SAL_INPUT_X;
-	if ( keystate[SDLK_s] ) inputHeld|=SAL_INPUT_X;
-	if ( keystate[SDLK_q] ) inputHeld|=SAL_INPUT_L;
-	if ( keystate[SDLK_w] ) inputHeld|=SAL_INPUT_R;
+	if ( keystate[SDLK_LCTRL] ) inputHeld|=SAL_INPUT_A;
+	if ( keystate[SDLK_LALT] ) inputHeld|=SAL_INPUT_B;
+	if ( keystate[SDLK_SPACE] ) inputHeld|=SAL_INPUT_X;
+	if ( keystate[SDLK_LSHIFT] ) inputHeld|=SAL_INPUT_Y;
+	if ( keystate[SDLK_TAB] ) inputHeld|=SAL_INPUT_L;
+	if ( keystate[SDLK_BACKSPACE] ) inputHeld|=SAL_INPUT_R;
 	if ( keystate[SDLK_RETURN] ) inputHeld|=SAL_INPUT_START;
-	if ( keystate[SDLK_SPACE] ) inputHeld|=SAL_INPUT_SELECT;
+	if ( keystate[SDLK_ESCAPE] ) inputHeld|=SAL_INPUT_SELECT;
 	if ( keystate[SDLK_UP] ) inputHeld|=SAL_INPUT_UP;
 	if ( keystate[SDLK_DOWN] ) inputHeld|=SAL_INPUT_DOWN;
 	if ( keystate[SDLK_LEFT] ) inputHeld|=SAL_INPUT_LEFT;
@@ -102,13 +142,62 @@ u32 sal_InputPoll()
 		inputHeld=0;
 		mInputRepeat=0;
 	}
+#endif
 
 	return inputHeld;
+}
+
+static int key_repeat_enabled = 1;
+
+u32 sal_InputPollRepeat()
+{
+	if (!key_repeat_enabled) {
+		SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+		key_repeat_enabled = 1;
+	}
+	return sal_Input(0);
+}
+
+u32 sal_InputPoll()
+{
+	if (key_repeat_enabled) {
+		SDL_EnableKeyRepeat(0, 0);
+		key_repeat_enabled = 0;
+	}
+	return sal_Input(1);
 }
 
 void sal_CpuSpeedSet(u32 mhz)
 {
 
+}
+
+u32 sal_CpuSpeedNext(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed+1;
+	if(newSpeed > 500) newSpeed = 500;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedPrevious(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed-1;
+	if(newSpeed > 500) newSpeed = 0;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedNextFast(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed+10;
+	if(newSpeed > 500) newSpeed = 500;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedPreviousFast(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed-10;
+	if(newSpeed > 500) newSpeed = 0;
+	return newSpeed;
 }
 
 s32 sal_Init(void)
@@ -121,12 +210,14 @@ s32 sal_Init(void)
 
 	memset(mInputRepeatTimer,0,sizeof(mInputRepeatTimer));
 
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+
 	return SAL_OK;
 }
 
 u32 sal_VideoInit(u32 bpp, u32 color, u32 refreshRate)
 {
-	
+	SDL_ShowCursor(0);
 
 	if (mScreen)
 	{
@@ -142,7 +233,7 @@ u32 sal_VideoInit(u32 bpp, u32 color, u32 refreshRate)
 	mRefreshRate=refreshRate;
 
 	//Set up the screen
-	mScreen = SDL_SetVideoMode( SAL_SCREEN_WIDTH, SAL_SCREEN_HEIGHT, bpp, SDL_SWSURFACE );
+	mScreen = SDL_SetVideoMode( SAL_SCREEN_WIDTH, SAL_SCREEN_HEIGHT, bpp, SDL_HWSURFACE | SDL_DOUBLEBUF);
 
     	//If there was an error in setting up the screen
     	if( mScreen == NULL )
@@ -170,28 +261,12 @@ u32 sal_VideoInit(u32 bpp, u32 color, u32 refreshRate)
 
 void sal_VideoFlip(s32 vsync)
 {
-	if (SDL_MUSTLOCK(mScreen)) 
-	{ 
+	if (SDL_MUSTLOCK(mScreen)) {
 		SDL_UnlockSurface(mScreen); 
-	}
-
-	//Update the screen
-    	if( SDL_Flip( mScreen ) == -1 )
-    	{
-        	return;
-    	}
-
-	// lock surface if needed 
-	if (SDL_MUSTLOCK(mScreen)) 
-	{ 
-		if (SDL_LockSurface(mScreen) < 0) 
-		{ 
-			sal_LastErrorSet("unable to lock surface"); 
-			return;
-		} 
-	}
-
-	return;
+		SDL_Flip(mScreen);
+		SDL_LockSurface(mScreen);
+	} else
+		SDL_Flip(mScreen);
 }
 
 void *sal_VideoGetBuffer()
@@ -220,6 +295,7 @@ void sal_VideoPaletteSet(u32 index, u32 color)
 void sal_Reset(void)
 {
 	sal_AudioClose();
+	SDL_Quit();
 }
 
 
@@ -232,7 +308,8 @@ int mainEntry(int argc, char *argv[]);
 // Prove entry point wrapper
 int main(int argc, char *argv[])
 {	
-	return mainEntry(argc-1,&argv[1]);
+	return mainEntry(argc,argv);
+//	return mainEntry(argc-1,&argv[1]);
 }
 
 

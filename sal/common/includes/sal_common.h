@@ -65,6 +65,7 @@ void sal_InputWaitForRelease();
 void sal_InputWaitForPress();
 void sal_InputIgnore();
 u32 sal_InputPoll();
+u32 sal_InputPollRepeat();
 
 void sal_Sleep(u32 milliSecs);
 
@@ -81,6 +82,7 @@ s32 sal_FileExists(s8 *filename);
 s32 sal_FileGetSize(s8 *filename, u32 *filesize);
 u32 sal_FileGetCRC(u8 *data, u32 size);
 
+const char * sal_DirectoryGetHome(void);
 void sal_DirectorySplitFilename(s8 *wholeFilename, s8* path, s8 *filename, s8 *ext);
 void sal_DirectoryGetParent(s8 *path);
 s32 sal_DirectoryGetCurrent(s8 *path, u32 size);

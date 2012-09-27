@@ -6,6 +6,32 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+typedef uint32_t u32;
+typedef int32_t  s32;
+typedef uint16_t u16;
+typedef int16_t  s16;
+typedef uint8_t  u8;
+typedef char     s8;
+
+#ifdef __DINGUX__
+#define SAL_INPUT_INDEX_UP			20
+#define SAL_INPUT_INDEX_DOWN			27
+#define SAL_INPUT_INDEX_LEFT			28
+#define SAL_INPUT_INDEX_RIGHT			18
+#define SAL_INPUT_INDEX_A			31
+#define SAL_INPUT_INDEX_B			21
+#define SAL_INPUT_INDEX_X			16
+#define SAL_INPUT_INDEX_Y			6
+#define SAL_INPUT_INDEX_L			8
+#define SAL_INPUT_INDEX_R			29
+#define SAL_INPUT_INDEX_START			11
+#define SAL_INPUT_INDEX_SELECT			10
+#define SAL_INPUT_INDEX_VOL_UP			0
+#define SAL_INPUT_INDEX_VOL_DOWN		0
+#define SAL_INPUT_INDEX_STICK_PUSH		0
+#define SAL_INPUT_INDEX_POWER			7
+#else
 #define SAL_INPUT_INDEX_UP			0
 #define SAL_INPUT_INDEX_DOWN			1
 #define SAL_INPUT_INDEX_LEFT			2
@@ -21,6 +47,7 @@ extern "C" {
 #define SAL_INPUT_INDEX_VOL_UP			12
 #define SAL_INPUT_INDEX_VOL_DOWN		13
 #define SAL_INPUT_INDEX_STICK_PUSH		14
+#endif
 
 #define SAL_INPUT_UP			(1<<SAL_INPUT_INDEX_UP)
 #define SAL_INPUT_DOWN			(1<<SAL_INPUT_INDEX_DOWN)
@@ -59,7 +86,13 @@ extern "C" {
 #define SAL_SEEK_END	SEEK_END
 #define SAL_SEEK_SET	SEEK_SET
 
-#define SAL_MAX_PATH	256
+struct SAL_DIR
+{
+	struct DIR *dir;
+};
+
+u32 sal_InputWait();
+void sal_SubmitSamples(void *buff, int len);
 
 #include "sal_common.h"
 
@@ -68,8 +101,4 @@ extern "C" {
 #endif
 
 #endif /* _SAL_H_ */
-
-
-
-
 

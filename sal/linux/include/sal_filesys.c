@@ -37,11 +37,6 @@ s32 sal_DirectoryGetItemCount(s8 *path, s32 *returnItemCount)
 	return SAL_OK;
 }
 
-struct SAL_DIR
-{
-	DIR *dir;
-};
-
 s32 sal_DirectoryOpen(s8 *path, struct SAL_DIR *d)
 {
 	d->dir=opendir((const char*)path);
@@ -150,6 +145,37 @@ s32 sal_DirectoryGet(s8 *path, struct SAL_DIRECTORY_ENTRY *dir, s32 startIndex, 
 }
 
 
+/* FIXME TODO just copied this from Dingoo - should really use dirname() from #include <libgen.h> */
+void sal_DirectoryGetParent(s8 *path)
+{
+	s32 i=0;
+	s32 lastDir=-1, firstDir=-1;
+	s8 dirSep[2] = {SAL_DIR_SEP};
+	s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
+	s32 len=(s32)strlen(path);
 
+	for(i=0;i<len;i++)
+	{
+		if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))
+		{
+			//Directory seperator found
+			if(lastDir==-1) firstDir = i;
+			if(i+1 != len) lastDir = i;
+		}
+	}
+
+	if (lastDir == firstDir) lastDir++; 
+	if (lastDir >= 0) 
+	{
+		for(i=lastDir; i<len; i++)
+		{
+			path[i]=0;
+		}
+	}
+	else
+	{
+		path[0]=0;
+	}
+}
 
 

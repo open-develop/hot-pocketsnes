@@ -6,6 +6,16 @@
 extern "C" {
 #endif
 
+
+typedef unsigned int u32;
+typedef unsigned short int u16;
+typedef unsigned char u8;
+typedef int s32;
+typedef short int s16;
+typedef char s8;
+
+
+
 #define SAL_INPUT_INDEX_UP			0
 #define SAL_INPUT_INDEX_DOWN			1
 #define SAL_INPUT_INDEX_LEFT			2
@@ -61,6 +71,12 @@ extern "C" {
 
 #define SAL_MAX_PATH	256
 
+struct SAL_DIR
+{
+	struct DIR *dir;
+};
+
+
 #include "sal_common.h"
 
 #ifdef __cplusplus
@@ -68,8 +84,3 @@ extern "C" {
 #endif
 
 #endif /* _SAL_H_ */
-
-
-
-
-

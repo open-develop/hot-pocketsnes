@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 
+/* TODO these seem more appropriate in sal_common.h, then include sal_common.h first? */
 typedef unsigned int u32;
 typedef unsigned short int u16;
 typedef unsigned char u8;
@@ -84,8 +85,3 @@ struct SAL_DIR
 #endif
 
 #endif /* _SAL_H_ */
-
-
-
-
-

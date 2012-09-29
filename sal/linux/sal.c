@@ -236,3 +236,34 @@ int main(int argc, char *argv[])
 }
 
 
+/**********************************************/
+
+/* FIXME TODO just copied this from Dingoo - should really use ifdef need clock speed */
+
+u32 sal_CpuSpeedNext(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed+1;
+	if(newSpeed > 500) newSpeed = 500;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedPrevious(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed-1;
+	if(newSpeed > 500) newSpeed = 0;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedNextFast(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed+10;
+	if(newSpeed > 500) newSpeed = 500;
+	return newSpeed;
+}
+
+u32 sal_CpuSpeedPreviousFast(u32 currSpeed)
+{
+	u32 newSpeed=currSpeed-10;
+	if(newSpeed > 500) newSpeed = 0;
+	return newSpeed;
+}

@@ -175,12 +175,26 @@ very simple.
 
 Change Log
 ----------
-v2.1    09/01/2011
+
+v2.2.2  unreleased
+
+    1) restore path for data back to a:\game\pocketsnes
+    2) working linux x86 support 
+
+v2.2.1  2012-01-07
+gottaX implements:
+
+    1) S-DD1 chip support, which means S-DD1 games should now be supported
+    i.e. Star Ocean and Street Fighter Alpha 2 should now work.
+    2) Support for 32KHz sound output added to match a real SNES.
+    3) Change in path for data from a:\game\pocketsnes to a:\game\3d\pocketsnes
+
+v2.1    2011-09-01
 Rom Browser modified to allow browsing of the SD card ( b:\ )
 Emulator now released as SIM and APP, since some wierd people
 actually like the SIM method.
 
-v2	08/01/2011
+v2.0    2011-08-01
 Application moved from SIM to APP
 Rom browser added
 ZIP support now enabled
@@ -192,16 +206,16 @@ NOTE: Quick states are lost if you load a new rom or exit PocketSnes
 Use the normal save state menu option to create states which
 are saved to disk.
 
-v1.2	04/01/2011
+v1.2    2011-01-04
 Fixed issue with SRAM saves.  
 SRAM saves saved in same directory as Snes rom
 PNG menu skin now moved into pocketsnes sub directory of GAME directory
 
-v1.1	02/01/2011
+v1.1    2011-01-02
 Fixed issue with sound rates menu option
 Linux port also added to source code which include SDL port details
 
-v1 01/01/2011
+v1.0    2011-01-01
 Clean port of Pocketsnes 
 SIM interface + menu
 

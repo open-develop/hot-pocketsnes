@@ -79,7 +79,10 @@ s32 sal_DirectoryRead(struct SAL_DIR *d, struct SAL_DIRECTORY_ENTRY *dir)
 			{
 				strcpy(dir->filename,de->d_name);
 				strcpy(dir->displayName,de->d_name);
-				dir->type=SAL_FILE_TYPE_DIRECTORY;
+				if (de->d_type == 4)
+					dir->type=SAL_FILE_TYPE_DIRECTORY;
+				else
+					dir->type=SAL_FILE_TYPE_FILE;
 				return SAL_OK;
 			}
 			else
@@ -145,37 +148,41 @@ s32 sal_DirectoryGet(s8 *path, struct SAL_DIRECTORY_ENTRY *dir, s32 startIndex, 
 }
 
 
-/* FIXME TODO just copied this from Dingoo - should really use dirname() from #include <libgen.h> */
+/* FIXME - should really use dirname() from #include <libgen.h> */
 void sal_DirectoryGetParent(s8 *path)
 {
-	s32 i=0;
-	s32 lastDir=-1, firstDir=-1;
-	s8 dirSep[2] = {SAL_DIR_SEP};
-	s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
-	s32 len=(s32)strlen(path);
+    s32 i=0;
+    s32 lastDir=-1, firstDir=-1;
+    s8 dirSep[2] = {SAL_DIR_SEP};
+    s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
+    s32 len=(s32)strlen(path);
 
-	for(i=0;i<len;i++)
-	{
-		if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))
-		{
-			//Directory seperator found
-			if(lastDir==-1) firstDir = i;
-			if(i+1 != len) lastDir = i;
-		}
-	}
+    for(i=0;i<len;i++)
+    {
+            if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))
+            {
+                    //Directory seperator found
+                    if(lastDir==-1) firstDir = i;
+                    if(i+1 != len) lastDir = i;
+            }
+    }
 
-	if (lastDir == firstDir) lastDir++; 
-	if (lastDir >= 0) 
-	{
-		for(i=lastDir; i<len; i++)
-		{
-			path[i]=0;
-		}
-	}
-	else
-	{
-		path[0]=0;
-	}
+    if (lastDir == firstDir) lastDir++; 
+    if (lastDir >= 0) 
+    {
+            for(i=lastDir; i<len; i++)
+            {
+                    path[i]=0;
+            }
+    }
+    else
+    {
+            path[0]=0;
+    }
 }
+
+
+
+
 
 

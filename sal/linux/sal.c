@@ -1,3 +1,6 @@
+/*
+**  Linux/posix sal
+*/
 
 #include <stdio.h>
 #include <dirent.h>
@@ -229,10 +232,10 @@ void sal_Reset(void)
 
 int mainEntry(int argc, char *argv[]);
 
-// Prove entry point wrapper
+/* Provide entry point wrapper */
 int main(int argc, char *argv[])
-{	
-	return mainEntry(argc-1,&argv[1]);
+{
+	return mainEntry(argc, argv);
 }
 
 

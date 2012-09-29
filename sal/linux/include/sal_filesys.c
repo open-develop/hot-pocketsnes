@@ -51,7 +51,7 @@ s32 sal_DirectoryClose(struct SAL_DIR *d)
 	{
 		if(d->dir)
 		{
-			closedir(d->dir);
+			(void) closedir(d->dir);
 			d->dir=NULL;
 			return SAL_OK;
 		}

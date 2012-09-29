@@ -12,7 +12,7 @@
 
 #define SAL_FRAME_BUFFER_COUNT	4
 #define SOUND_BUFFER_COUNT 	8
-#define AUDIO_RATE_COUNT	5
+#define AUDIO_RATE_COUNT	6
 #define MAX_SOUND_LEN 	((48000/60)*2)
 
 
@@ -25,7 +25,7 @@ static u32 mPaletteBuffer[0x100];
 static u32 mInputFirst=0;
 static s8  mCurrDir[SAL_MAX_PATH];
 
-s32 mAudioRateLookup[AUDIO_RATE_COUNT]={8250,11025,22050,44100,48000};
+s32 mAudioRateLookup[AUDIO_RATE_COUNT]={8250,11025,22050,32000,44100,48000};
 
 #include "sal_common.c"
 #include "sal_sound.c"
@@ -107,28 +107,28 @@ void sal_CpuSpeedSet(u32 mhz)
 u32 sal_CpuSpeedNext(u32 currSpeed)
 {
 	u32 newSpeed=currSpeed+1;
-	if(newSpeed > 500) newSpeed = 500;
+	if(newSpeed > 450) newSpeed = 450;
 	return newSpeed;
 }
 
 u32 sal_CpuSpeedPrevious(u32 currSpeed)
 {
 	u32 newSpeed=currSpeed-1;
-	if(newSpeed > 500) newSpeed = 0;
+	if(newSpeed < 300) newSpeed = 300;
 	return newSpeed;
 }
 
 u32 sal_CpuSpeedNextFast(u32 currSpeed)
 {
 	u32 newSpeed=currSpeed+10;
-	if(newSpeed > 500) newSpeed = 500;
+	if(newSpeed > 450) newSpeed = 450;
 	return newSpeed;
 }
 
 u32 sal_CpuSpeedPreviousFast(u32 currSpeed)
 {
 	u32 newSpeed=currSpeed-10;
-	if(newSpeed > 500) newSpeed = 0;
+	if(newSpeed < 300) newSpeed = 300;
 	return newSpeed;
 }
 

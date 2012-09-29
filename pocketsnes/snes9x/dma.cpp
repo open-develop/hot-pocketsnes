@@ -49,6 +49,11 @@
 #include "gfx.h"
 #include "sa1.h"
 
+
+#include "sdd1emu.h"
+static uint8	sdd1_decode_buffer[0x10000];
+
+
 extern int HDMA_ModeByteCounts [8];
 extern uint8 *HDMAMemPointers [8];
 extern uint8 *HDMABasePointers [8];
@@ -93,69 +98,27 @@ void S9xDoDMA (uint8 Channel)
 	break;
     }
 
-    if (Settings.SDD1)
-    {
-	if (d->AAddressFixed && Memory.FillRAM [0x4801] > 0)
+	// S-DD1
+	if (Settings.SDD1)
 	{
-	    // Hacky support for pre-decompressed S-DD1 data
-	    inc = !d->AAddressDecrement ? 1 : -1;
-	    uint32 address = (((d->ABank << 16) | d->AAddress) & 0xfffff) << 4;
-
-	    address |= Memory.FillRAM [0x4804 + ((d->ABank - 0xc0) >> 4)];
-#if (defined(__linux__) || defined (__WIN32__)) && !defined(__DINGOO__)
-	    void *ptr = bsearch (&address, Memory.SDD1Index, 
-				 Memory.SDD1Entries, 12, S9xCompareSDD1IndexEntries);
-	    if (ptr)
-		in_sdd1_dma = *(uint32 *) ((uint8 *) ptr + 4) + Memory.SDD1Data;
-#else
-	    uint8 *ptr = Memory.SDD1Index;
-
-	    for (uint32 e = 0; e < Memory.SDD1Entries; e++, ptr += 12)
-	    {
-		if (address == *(uint32 *) ptr)
+		if (d->AAddressFixed && Memory.FillRAM[0x4801] > 0)
 		{
-		    in_sdd1_dma = *(uint32 *) (ptr + 4) + Memory.SDD1Data;
-		    break;
-		}
-	    }
-#endif
+			// XXX: Should probably verify that we're DMAing from ROM?
+			// And somewhere we should make sure we're not running across a mapping boundary too.
+			// Hacky support for pre-decompressed S-DD1 data
+			inc = !d->AAddressDecrement ? 1 : -1;
 
-	    if (!in_sdd1_dma)
-	    {
-		// No matching decompressed data found. Must be some new 
-		// graphics not encountered before. Log it if it hasn't been
-		// already.
-		uint8 *p = Memory.SDD1LoggedData;
-		bool8_32 found = FALSE;
-		uint8 SDD1Bank = Memory.FillRAM [0x4804 + ((d->ABank - 0xc0) >> 4)] | 0xf0;
+			uint8	*in_ptr = GetBasePointer(((d->ABank << 16) | d->AAddress));
+			if (in_ptr)
+			{
+				in_ptr += d->AAddress;
+				SDD1_decompress(sdd1_decode_buffer, in_ptr, d->TransferBytes);
+			}
+			in_sdd1_dma = sdd1_decode_buffer;
+		}
 
-		for (uint32 i = 0; i < Memory.SDD1LoggedDataCount; i++, p += 8)
-		{
-		    if (*p == d->ABank ||
-			*(p + 1) == (d->AAddress >> 8) &&
-			*(p + 2) == (d->AAddress & 0xff) &&
-			*(p + 3) == (count >> 8) &&
-			*(p + 4) == (count & 0xff) &&
-			*(p + 7) == SDD1Bank)
-		    {
-			found = TRUE;
-			break;
-		    }
-		}
-		if (!found && Memory.SDD1LoggedDataCount < MEMMAP_MAX_SDD1_LOGGED_ENTRIES)
-		{
-		    *p = d->ABank;
-		    *(p + 1) = d->AAddress >> 8;
-		    *(p + 2) = d->AAddress & 0xff;
-		    *(p + 3) = count >> 8;
-		    *(p + 4) = count & 0xff;
-		    *(p + 7) = SDD1Bank;
-		    Memory.SDD1LoggedDataCount += 1;
-		}
-	    }
+		Memory.FillRAM[0x4801] = 0;
 	}
-	Memory.FillRAM [0x4801] = 0;
-    }
 
     if (d->BAddress == 0x18 && SA1.in_char_dma && (d->ABank & 0xf0) == 0x40)
     {

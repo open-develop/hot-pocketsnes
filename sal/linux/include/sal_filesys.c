@@ -1,6 +1,7 @@
 
 #include <string.h>
 #include <error.h>
+#include <sys/stat.h>
 #include "sal.h"
 
 s32 sal_DirectoryGetCurrent(s8 *path, u32 size)
@@ -19,7 +20,7 @@ s32 sal_DirectoryCreate(s8 *path)
 s32 sal_DirectoryGetItemCount(s8 *path, s32 *returnItemCount)
 {
 	u32 count=0;
-	DIR *d;
+	struct DIR *d;
 	struct dirent *de;
 
 	d = opendir((const char*)path);
@@ -30,7 +31,7 @@ s32 sal_DirectoryGetItemCount(s8 *path, s32 *returnItemCount)
 		{
 			count++;
 		}
-
+		closedir(d);
 	}
 
 	*returnItemCount=count;
@@ -104,7 +105,7 @@ s32 sal_DirectoryRead(struct SAL_DIR *d, struct SAL_DIRECTORY_ENTRY *dir)
 s32 sal_DirectoryGet(s8 *path, struct SAL_DIRECTORY_ENTRY *dir, s32 startIndex, s32 count)
 {
 	s32 fileCount=0;
-	DIR *d;
+	struct DIR *d;
 	struct dirent *de;
 	ulong entriesRead=0;
 	char fullFilename[256];
@@ -144,45 +145,39 @@ s32 sal_DirectoryGet(s8 *path, struct SAL_DIRECTORY_ENTRY *dir, s32 startIndex, 
 		}
 		closedir(d);
 	}
-	return SAL_OK;
+	return SAL_ERROR;
 }
 
 
-/* FIXME - should really use dirname() from #include <libgen.h> */
+
 void sal_DirectoryGetParent(s8 *path)
 {
-    s32 i=0;
-    s32 lastDir=-1, firstDir=-1;
-    s8 dirSep[2] = {SAL_DIR_SEP};
-    s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
-    s32 len=(s32)strlen(path);
+	s32 i=0;
+	s32 lastDir=-1, firstDir=-1;
+	s8 dirSep[2] = {SAL_DIR_SEP};
+	s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
+	s32 len=(s32)strlen(path);
 
-    for(i=0;i<len;i++)
-    {
-            if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))
-            {
-                    //Directory seperator found
-                    if(lastDir==-1) firstDir = i;
-                    if(i+1 != len) lastDir = i;
-            }
-    }
+	for(i=0;i<len;i++)
+	{
+		if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))
+		{
+			//Directory seperator found
+			if(lastDir==-1) firstDir = i;
+			if(i+1 != len) lastDir = i;
+		}
+	}
 
-    if (lastDir == firstDir) lastDir++; 
-    if (lastDir >= 0) 
-    {
-            for(i=lastDir; i<len; i++)
-            {
-                    path[i]=0;
-            }
-    }
-    else
-    {
-            path[0]=0;
-    }
+	if (lastDir == firstDir) lastDir++;
+	if (lastDir >= 0)
+	{
+		for(i=lastDir; i<len; i++)
+		{
+			path[i]=0;
+		}
+	}
+	else
+	{
+		path[0]=0;
+	}
 }
-
-
-
-
-
-

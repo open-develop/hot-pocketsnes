@@ -158,7 +158,7 @@ bool8_32 S9xDeinitUpdate (int Width, int Height, bool8_32)
 
 const char *S9xGetFilename (const char *ex)
 {
-      	char dir [SAL_MAX_PATH];
+      	static char dir [SAL_MAX_PATH];
       	char fname [SAL_MAX_PATH];
       	char ext [SAL_MAX_PATH];
 

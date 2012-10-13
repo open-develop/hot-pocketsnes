@@ -203,6 +203,7 @@ void freeRomLists()
 {
 	//free rom list buffers
 	if(mRomList != NULL) free(mRomList);
+	mRomList = NULL;
 }
 
 void DefaultRomListItems()

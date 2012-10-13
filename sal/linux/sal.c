@@ -1,5 +1,5 @@
 /*
-**  Linux/posix sal
+** Linux/posix (x86) SDL SAL
 */
 
 #include <stdio.h>
@@ -154,6 +154,8 @@ u32 sal_VideoInit(u32 bpp, u32 color, u32 refreshRate)
 		sal_LastErrorSet("SDL_SetVideoMode failed");        	
 		return SAL_ERROR;
     	}
+
+	SDL_WM_SetCaption("PocketSNES", NULL);
 
     	// lock surface if needed 
 	if (SDL_MUSTLOCK(mScreen)) 

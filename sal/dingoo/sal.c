@@ -1,3 +1,6 @@
+/*
+** Dingoo (Native) SAL
+*/
 
 #include <stdio.h>
 #include <png/png.h>

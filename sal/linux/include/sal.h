@@ -1,3 +1,6 @@
+/*
+** Linux (x86) SDL SAL
+*/
 
 #ifndef _SAL_H_
 #define _SAL_H_

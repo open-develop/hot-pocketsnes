@@ -45,6 +45,21 @@ u32 sal_InputPoll()
 
 	keystate = SDL_GetKeyState(NULL);
 	
+#ifdef DINGOO_BUILD
+	/* OpenDingux build */
+	if ( keystate[SDLK_LCTRL] ) inputHeld|=SAL_INPUT_A;
+	if ( keystate[SDLK_LALT] ) inputHeld|=SAL_INPUT_B;
+	if ( keystate[SDLK_LSHIFT] ) inputHeld|=SAL_INPUT_Y;
+	if ( keystate[SDLK_SPACE] ) inputHeld|=SAL_INPUT_X;
+	if ( keystate[SDLK_TAB] ) inputHeld|=SAL_INPUT_L;
+	if ( keystate[SDLK_BACKSPACE] ) inputHeld|=SAL_INPUT_R;
+	if ( keystate[SDLK_RETURN] ) inputHeld|=SAL_INPUT_START;
+	if ( keystate[SDLK_ESCAPE] ) inputHeld|=SAL_INPUT_SELECT;
+	if ( keystate[SDLK_UP] ) inputHeld|=SAL_INPUT_UP;
+	if ( keystate[SDLK_DOWN] ) inputHeld|=SAL_INPUT_DOWN;
+	if ( keystate[SDLK_LEFT] ) inputHeld|=SAL_INPUT_LEFT;
+	if ( keystate[SDLK_RIGHT] ) inputHeld|=SAL_INPUT_RIGHT;
+#else /* not DINGOO_BUILD, probably desktop PC */
 	if ( keystate[SDLK_z] ) inputHeld|=SAL_INPUT_A;
 	if ( keystate[SDLK_x] ) inputHeld|=SAL_INPUT_B;
 	if ( keystate[SDLK_a] ) inputHeld|=SAL_INPUT_Y;
@@ -57,6 +72,7 @@ u32 sal_InputPoll()
 	if ( keystate[SDLK_DOWN] ) inputHeld|=SAL_INPUT_DOWN;
 	if ( keystate[SDLK_LEFT] ) inputHeld|=SAL_INPUT_LEFT;
 	if ( keystate[SDLK_RIGHT] ) inputHeld|=SAL_INPUT_RIGHT;
+#endif /* not DINGOO_BUILD, probably desktop PC */
 
 	// Process key repeats
 	timer=sal_TimerRead();

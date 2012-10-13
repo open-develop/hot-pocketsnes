@@ -16,7 +16,7 @@
 #define CPU_SPEED_COUNT		0
 #define AUDIO_RATE_COUNT	6
 #define PALETTE_BUFFER_LENGTH	256*2*4
-#define MAX_SOUND_LEN 	((48000/60)*2)
+#define MAX_SOUND_LEN 	((48000/60)*2*2)
 
 static SDL_Surface *mScreen = NULL;
 static u32 mSoundSampleCount=0;

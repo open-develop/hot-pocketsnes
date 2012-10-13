@@ -1,3 +1,4 @@
+# make -f makefile.linux
 
 # Define the applications properties here:
 
@@ -6,8 +7,9 @@ APP_NAME = pocketsnes
 # Define the compiler settings here:
 TOOLCHAIN = /usr
 
-CPP       = $(TOOLCHAIN)/bin/g++
 CC        = $(TOOLCHAIN)/bin/gcc
+#CPP       = $(TOOLCHAIN)/bin/g++
+CPP       = $(CC)
 LD        = $(TOOLCHAIN)/bin/ld
 
 SOURCE    = ./snes9x ./menu ../sal/linux ../sal/common
@@ -27,7 +29,7 @@ CC_OPTS   = $(INCLUDE) $(W_OPTS) -c
 CC_OPTS_A = $(CC_OPTS) 
 
 LIB_PATH  = $(TOOLCHAIN)/lib
-LIBS      = -$(shell sdl-config --libs) -lpthread -lz -lpng -lm -lgcc -lstdc++
+LIBS      = `sdl-config --libs` -lpthread -lz -lpng -lm -lgcc -lstdc++
 
 LD_OPTS   = -L$(LIB_PATH) $(LIBS)
 

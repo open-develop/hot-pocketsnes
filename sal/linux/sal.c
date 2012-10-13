@@ -12,9 +12,9 @@
 #include "zip.h"
 
 #define SAL_FRAME_BUFFER_COUNT	4
-#define SOUND_BUFFER_COUNT 	4
+#define SOUND_BUFFER_COUNT 	8
 #define CPU_SPEED_COUNT		0
-#define AUDIO_RATE_COUNT	5
+#define AUDIO_RATE_COUNT	6
 #define PALETTE_BUFFER_LENGTH	256*2*4
 #define MAX_SOUND_LEN 	((48000/60)*2)
 
@@ -29,7 +29,7 @@ static u32 *mPaletteLast=(u32*)&mPaletteBuffer[0];
 static u32 *mPaletteEnd=(u32*)&mPaletteBuffer[PALETTE_BUFFER_LENGTH];
 static u32 mInputFirst=0;
 
-s32 mAudioRateLookup[AUDIO_RATE_COUNT]={8250,11025,16500,22050,44100};
+s32 mAudioRateLookup[AUDIO_RATE_COUNT]={8250,11025,22050,32000,44100,48000};
 s32 mCpuSpeedLookup[1]={0};
 
 #include "sal_common.c"

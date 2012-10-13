@@ -120,6 +120,7 @@ s32 sal_Init(void)
 	{
 		return SAL_ERROR;
 	}
+	SDL_ShowCursor(SDL_DISABLE); /* There is no mouse control in this emu */
 	sal_TimerInit(60);
 
 	memset(mInputRepeatTimer,0,sizeof(mInputRepeatTimer));

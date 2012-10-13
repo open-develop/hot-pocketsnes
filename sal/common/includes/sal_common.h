@@ -36,6 +36,7 @@ void sal_VideoPaletteSync();
 void sal_VideoBitmapScale(int startx, int starty, int viswidth, int visheight, int newwidth, int newheight,int pitch, u16 *src, u16 *dst);
 
 s32 sal_AudioInit(s32 rate, s32 bits, s32 stereo, s32 Hz);
+void sal_SubmitSamples(void *buff, int len); /* this is an OPTIONAL push style sound function (i.e. not callback) */
 void sal_AudioClose(void);
 u32 sal_AudioGetCurrentBufferIndex();
 u32 sal_AudioGetPrevBufferIndex();

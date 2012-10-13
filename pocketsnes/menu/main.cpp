@@ -376,6 +376,7 @@ static
 int RunSound()
 {
   	int skip=0, done=0, doneLast=0,aim=0,i;
+  	uint8* soundbuf=NULL;
 
 	sal_AudioInit(mMenuOptions.soundRate, 16, 1, 60);
 	Settings.APUEnabled = 1;
@@ -391,13 +392,13 @@ int RunSound()
 		for (i=0;i<10;i++)
 		{
 			aim=sal_AudioGetPrevBufferIndex();
-			if (done!=aim)
+			if (done < aim)
 			{
 				doneLast=done;
 				done=sal_AudioGetNextBufferIndex(done);
 				if(mMenuOptions.frameSkip==0) //Auto
 				{
-					if(done==aim) IPPU.RenderThisFrame=TRUE; // Render last frame
+					if(done>=aim) IPPU.RenderThisFrame=TRUE; // Render last frame
 					else          IPPU.RenderThisFrame=FALSE; // lagged behind, so skip
 
 				}
@@ -417,11 +418,15 @@ int RunSound()
 		
 				//Run SNES for one glorious frame
 		    		S9xMainLoop ();
-				S9xMixSamples((uint8*)sal_AudioGetBuffer(doneLast), sal_AudioGetSampleCount());
+                soundbuf = (uint8*)sal_AudioGetBuffer(doneLast);
+				S9xMixSamples((uint8*)soundbuf, sal_AudioGetSampleCount());
+#ifdef SAL_AUDIO_PUSH
+                sal_SubmitSamples(soundbuf, sal_AudioGetBufferSize()); /* if def push sound */
+#endif /* SAL_AUDIO_PUSH */
 				HandleQuickStateRequests();
 				
 			}
-			if (done==aim) break; // Up to date now
+			if (done>=aim) break; // Up to date now
 			if (mEnterMenu) break;
 		}
 		done=aim; // Make sure up to date

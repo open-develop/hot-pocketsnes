@@ -24,7 +24,15 @@ INCLUDE   = -I$(TOOLCHAIN)/include \
 		-I ./menu -I ./linux -I ./snes9x -I ./snes9x_include -I$ 
 
 W_OPTS    = -O2 $(shell sdl-config --cflags) -D__LINUX__
-#DEBUG_BUILD = true
+LIBS      = `sdl-config --libs` -lpthread -lz -lpng -lm -lgcc -lstdc++
+
+#SAL_USE_LIBAO = true
+ifdef SAL_USE_LIBAO
+	W_OPTS += -DSAL_AUDIO_PUSH -DSAL_NO_SDL_SOUND
+	LIBS += -lao
+endif
+
+DEBUG_BUILD = true
 ifdef DEBUG_BUILD
 	W_OPTS += -g
 	DO_STRIP = 
@@ -37,7 +45,6 @@ CC_OPTS   = $(CPP_OPTS)
 CC_OPTS_A = $(CC_OPTS) 
 
 LIB_PATH  = $(TOOLCHAIN)/lib
-LIBS      = `sdl-config --libs` -lpthread -lz -lpng -lm -lgcc -lstdc++
 
 LD_OPTS   = -L$(LIB_PATH) $(LIBS)
 

@@ -47,7 +47,7 @@ u32 sal_InputPoll()
 	
 	if ( keystate[SDLK_z] ) inputHeld|=SAL_INPUT_A;
 	if ( keystate[SDLK_x] ) inputHeld|=SAL_INPUT_B;
-	if ( keystate[SDLK_a] ) inputHeld|=SAL_INPUT_X;
+	if ( keystate[SDLK_a] ) inputHeld|=SAL_INPUT_Y;
 	if ( keystate[SDLK_s] ) inputHeld|=SAL_INPUT_X;
 	if ( keystate[SDLK_q] ) inputHeld|=SAL_INPUT_L;
 	if ( keystate[SDLK_w] ) inputHeld|=SAL_INPUT_R;

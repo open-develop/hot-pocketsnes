@@ -47,7 +47,12 @@ void DefaultMenuOptions(void)
 	mMenuOptions->country=0;
 	mMenuOptions->showFps=1;
 	mMenuOptions->soundRate=48000;
+#if defined(__DINGOO_APP__) || defined(__DINGOO_SIM__)
 	mMenuOptions->fullScreen=1;
+#else
+	/* stretched full screen mode not implemented */
+	mMenuOptions->fullScreen=0;
+#endif
 	mMenuOptions->autoSaveSram=0;
 }
 

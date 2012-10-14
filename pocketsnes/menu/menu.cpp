@@ -968,18 +968,22 @@ s32 SaveStateMenu(void)
 
 void ShowCredits()
 {
-	s32 menuExit=0,menuCount=9,menufocus=0,menuSmooth=0;
+	s32 menuExit=0,menuCount=0,menufocus=0,menuSmooth=0;
 	u32 keysRepeat=0,keysHeld=0;
+	u32 tc=0;
 
-	strcpy(mMenuText[0],"Credits");
-	strcpy(mMenuText[1],"-------------------------------------");
-	strcpy(mMenuText[2],"PocketSNES created by Scott Ramsby");
-	strcpy(mMenuText[3],"Ported to the Dingoo by Reesy");
-	strcpy(mMenuText[4],"-------------------------------------");
-	strcpy(mMenuText[5],"Special thanks to Flatmush and Hartex");
-	strcpy(mMenuText[6],"who created the Dingoo SDK without ");
-	strcpy(mMenuText[7],"which this port would not have been ");
-	strcpy(mMenuText[8],"possible!");
+	strcpy(mMenuText[tc++],"About/Credits");
+	strcpy(mMenuText[tc++],"-------------------------------------");
+	strcpy(mMenuText[tc++],"http://hot-pocketsnes.googlecode.com/");
+	strcpy(mMenuText[tc++],"");
+	strcpy(mMenuText[tc++],"PocketSNES created by Scott Ramsby");
+	strcpy(mMenuText[tc++],"Ported to the Dingoo by Reesy");
+	strcpy(mMenuText[tc++],"-------------------------------------");
+	strcpy(mMenuText[tc++],"Special thanks to Flatmush and Hartex");
+	strcpy(mMenuText[tc++],"who created the Dingoo SDK without ");
+	strcpy(mMenuText[tc++],"which this port would not have been ");
+	strcpy(mMenuText[tc++],"possible!");
+	menuCount=tc;
 
 	sal_InputIgnore();
 	while (!menuExit)
@@ -1030,7 +1034,7 @@ void MainMenuUpdateText(s32 menu_index)
 			break;
 
 		case MENU_CREDITS:
-			strcpy(mMenuText[MENU_CREDITS],"Credits");
+			strcpy(mMenuText[MENU_CREDITS],"About");
 			break;
 
 		case MENU_RETURN:

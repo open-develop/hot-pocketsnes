@@ -242,6 +242,7 @@ void sal_VideoPaletteSet(u32 index, u32 color)
 void sal_Reset(void)
 {
 	sal_AudioClose();
+	SDL_Quit();
 }
 
 

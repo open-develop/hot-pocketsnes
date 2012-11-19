@@ -28,7 +28,7 @@ CC_OPTS   = $(CPP_OPTS)
 CC_OPTS_A = $(CC_OPTS) 
 
 LIB_PATH  = $(TOOLCHAIN)/lib
-LIBS      =  -lz `${DINGUX_SDK}/usr/bin/sdl-config --libs` -lpng  -lstdc++
+LIBS      =  -lz -lm `${DINGUX_SDK}/usr/bin/sdl-config --libs` -lpng  -lstdc++
 # -lpthread -lz -lpng -lm -lgcc -lstdc++
 
 LD_OPTS   = -L$(LIB_PATH) $(LIBS)

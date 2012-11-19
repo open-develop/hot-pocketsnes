@@ -378,13 +378,12 @@ int RunSound()
   	int skip=0, done=0, doneLast=0,aim=0,i;
   	uint8* soundbuf=NULL;
 
-	sal_AudioInit(mMenuOptions.soundRate, 16, 1, 60);
+	Settings.SixteenBitSound=true;
+	sal_AudioInit(mMenuOptions.soundRate, Settings.SixteenBitSound?16:8, Settings.Stereo, 60);
 	Settings.APUEnabled = 1;
 	Settings.NextAPUEnabled = Settings.APUEnabled;					
 	Settings.SoundPlaybackRate=mMenuOptions.soundRate;
-	Settings.SixteenBitSound=true;
-	Settings.Stereo=1;
-	S9xInitSound (mMenuOptions.soundRate,1,sal_AudioGetBufferSize());
+	S9xInitSound(mMenuOptions.soundRate, Settings.Stereo, sal_AudioGetBufferSize());
 	S9xSetPlaybackRate(mMenuOptions.soundRate);
 	S9xSetSoundMute (FALSE);
   	while(!mEnterMenu) 
@@ -521,7 +520,7 @@ int SnesInit()
 
 	Settings.JoystickEnabled = FALSE;
 	Settings.SoundPlaybackRate = mMenuOptions.soundRate;
-	Settings.Stereo = FALSE;
+	Settings.Stereo = TRUE;
 	Settings.SoundBufferSize = 0;
 	Settings.CyclesPercentage = 100;
 	Settings.DisableSoundEcho = FALSE;

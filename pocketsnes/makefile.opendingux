@@ -31,6 +31,12 @@ LIB_PATH  = $(TOOLCHAIN)/lib
 LIBS      =  -lz -lm `${DINGUX_SDK}/usr/bin/sdl-config --libs` -lpng  -lstdc++
 # -lpthread -lz -lpng -lm -lgcc -lstdc++
 
+SAL_USE_LIBAO = true
+ifdef SAL_USE_LIBAO
+	W_OPTS += -DSAL_AUDIO_PUSH -DSAL_NO_SDL_SOUND
+	LIBS += -lao
+endif
+
 LD_OPTS   = -L$(LIB_PATH) $(LIBS)
 
 # Find all source files

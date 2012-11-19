@@ -88,17 +88,32 @@ static ao_device *ao_dev = NULL;
 
 s32 sal_AudioInit(s32 rate, s32 bits, s32 stereo, s32 Hz)
 {
+        ao_sample_format ao_format;
+
         stereo = stereo ? 2 : 1;
         ao_initialize();
         ao_sample_format ao = {bits, rate, stereo, AO_FMT_LITTLE, NULL};
-        ao_dev = ao_open_live(ao_default_driver_id(), &ao, NULL);
+
+        memset(&ao_format, 0, sizeof(ao_format));
+        ao_format.bits = bits;
+        ao_format.rate = rate;
+        ao_format.channels = stereo;
+        ao_format.byte_format = AO_FMT_LITTLE;
+
+        ao_dev = ao_open_live(ao_default_driver_id(), &ao_format, NULL /* no options */);
         if (!ao_dev) {
                 perror("Failed to open sound.\n");
                 printf("Failed to open sound.\n");
                 return SAL_ERROR;
         }
         mSoundSampleCount = (rate/Hz) * (stereo);
+        /*
         mSoundBufferSize = mSoundSampleCount * (bits >> 3);
+        */
+        mSoundBufferSize = mSoundSampleCount * ((bits==16)?2:1);
+        mStereo = stereo;
+        mSb=0;
+        
         return SAL_OK;
 }
 
@@ -113,6 +128,14 @@ void sal_AudioClose(void)
 void sal_SubmitSamples(void *buff, int len)
 {
         ao_play(ao_dev, buff, len);
+        if (mSb+1 >= SOUND_BUFFER_COUNT) 
+        {
+            mSb=0;
+        }
+        else
+        {
+            mSb++;
+        }
 }
 
 void sal_AudioSetVolume(s32 l, s32 r) 

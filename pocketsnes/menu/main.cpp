@@ -392,7 +392,9 @@ int RunSound()
 		for (i=0;i<10;i++)
 		{
 			aim=sal_AudioGetPrevBufferIndex();
+#ifndef SAL_AUDIO_PUSH
 			if (done < aim)
+#endif /* SAL_AUDIO_PUSH */
 			{
 				doneLast=done;
 				done=sal_AudioGetNextBufferIndex(done);
@@ -518,12 +520,12 @@ int SnesInit()
 	ZeroMemory (&Settings, sizeof (Settings));
 
 	Settings.JoystickEnabled = FALSE;
-	Settings.SoundPlaybackRate = 22050;
+	Settings.SoundPlaybackRate = mMenuOptions.soundRate;
 	Settings.Stereo = FALSE;
 	Settings.SoundBufferSize = 0;
 	Settings.CyclesPercentage = 100;
 	Settings.DisableSoundEcho = FALSE;
-	Settings.APUEnabled = FALSE;
+	Settings.APUEnabled = TRUE;
 	Settings.H_Max = SNES_CYCLES_PER_SCANLINE;
 	Settings.SkipFrames = AUTO_FRAMERATE;
 	Settings.Shutdown = Settings.ShutdownMaster = TRUE;

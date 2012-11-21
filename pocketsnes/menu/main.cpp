@@ -130,14 +130,14 @@ bool8_32 S9xDeinitUpdate (int Width, int Height, bool8_32)
 	{
 		mFps++;
 		newTimer=sal_TimerRead();
-		if(newTimer-mLastTimer>60)
+		if(newTimer-mLastTimer>=Memory.ROMFramesPerSecond)
 		{
 			mLastTimer=newTimer;
-			sprintf(mFpsDisplay,"FPS: %d",mFps);
+			sprintf(mFpsDisplay,"FPS: %d/%d",mFps,Memory.ROMFramesPerSecond);
 			mFps=0;
 		}
 		
-		sal_VideoDrawRect(0,0,8*8,8,SAL_RGB(0,0,0));
+		sal_VideoDrawRect(0,0,10*8,8,SAL_RGB(0,0,0));
 		sal_VideoPrint(0,0,mFpsDisplay,SAL_RGB(31,31,31));
 	}
 
@@ -379,13 +379,15 @@ int RunSound()
   	uint8* soundbuf=NULL;
 
 	Settings.SixteenBitSound=true;
-	sal_AudioInit(mMenuOptions.soundRate, Settings.SixteenBitSound?16:8, Settings.Stereo, 60);
+	sal_AudioInit(mMenuOptions.soundRate, Settings.SixteenBitSound?16:8, Settings.Stereo, Memory.ROMFramesPerSecond);
 	Settings.APUEnabled = 1;
 	Settings.NextAPUEnabled = Settings.APUEnabled;					
 	Settings.SoundPlaybackRate=mMenuOptions.soundRate;
 	S9xInitSound(mMenuOptions.soundRate, Settings.Stereo, sal_AudioGetBufferSize());
 	S9xSetPlaybackRate(mMenuOptions.soundRate);
 	S9xSetSoundMute (FALSE);
+	sal_TimerInit(Memory.ROMFramesPerSecond);
+
   	while(!mEnterMenu) 
   	{
 		for (i=0;i<10;i++)
@@ -446,7 +448,7 @@ int RunNoSound()
 	Settings.APUEnabled = 0;
 	Settings.NextAPUEnabled = Settings.APUEnabled;					
 	S9xSetSoundMute (TRUE);
-	sal_TimerInit(60);
+	sal_TimerInit(Memory.ROMFramesPerSecond);
 	done=sal_TimerRead()-1;
   	while(!mEnterMenu) 
   	{
@@ -663,7 +665,7 @@ int mainEntry(int argc, char* argv[])
 	s32 event=EVENT_NONE;
 
 	sal_Init();
-	sal_VideoInit(16,SAL_RGB(0,0,0),60);
+	sal_VideoInit(16,SAL_RGB(0,0,0),Memory.ROMFramesPerSecond);
 
 	if (argc >= 2) 
 	{

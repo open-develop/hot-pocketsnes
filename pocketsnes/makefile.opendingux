@@ -4,11 +4,12 @@
 APP_NAME = pocketsnes
 
 # Define the compiler settings here:
-TOOLCHAIN = /opt/opendingux-toolchain/usr
+TOOLCHAIN = $(DINGUX_SDK)
 
-CPP       = $(TOOLCHAIN)/bin/mipsel-linux-gcc
-CC        = $(TOOLCHAIN)/bin/mipsel-linux-gcc
-LD        = $(TOOLCHAIN)/bin/mipsel-linux-ld
+EXE_PREFIX = mipsel-linux-
+CC        = ${EXE_PREFIX}gcc
+CPP       = $(CC)
+LD        = $(CC)
 
 SOURCE    = ./snes9x ./menu ../sal/linux ../sal/common
 
@@ -40,14 +41,14 @@ OPTIMIZE += -fprofile-use #generate=/boot/pocketsnes
 		   -fstrict-aliasing -fsingle-precision-constant -fno-exceptions -ffunction-sections
 
 #W_OPTS    = -g -O3 -D__LINUX__ -D__DINGUX__
-W_OPTS    = -g $(OPTIMIZE) $(shell sdl-config --cflags) -D__LINUX__ -D__DINGUX__ -pipe -fsigned-char
+W_OPTS    = -g $(OPTIMIZE) `${DINGUX_SDK}/usr/bin/sdl-config --cflags` -D__LINUX__ -D__DINGUX__ -pipe -fsigned-char
 CPP_OPTS  = $(INCLUDE) $(W_OPTS)
 CC_OPTS   = $(INCLUDE) $(W_OPTS)
 CC_OPTS_A = $(CC_OPTS) 
 
 LIB_PATH  = $(TOOLCHAIN)/lib
 #LIBS      = -lpthread -lz -lpng -lm -lgcc -lstdc++
-LIBS      = $(shell sdl-config --libs) -lpthread -lz -lpng -lao -lm -lgcc -lstdc++
+LIBS      = `${DINGUX_SDK}/usr/bin/sdl-config --libs` -lpthread -lz -lpng -lao -lm -lgcc -lstdc++
 
 LD_OPTS   = $(W_OPTS) -L$(LIB_PATH) $(LIBS) -Wl,--gc-sections -Wl,-s
 

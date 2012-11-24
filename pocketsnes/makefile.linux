@@ -26,13 +26,14 @@ INCLUDE   = -I$(TOOLCHAIN)/include \
 W_OPTS    = -O2 $(shell sdl-config --cflags) -D__LINUX__
 LIBS      = `sdl-config --libs` -lpthread -lz -lpng -lm -lgcc -lstdc++
 
+#if SAL_USE_LIBAO is not set, use SDL Audio
 SAL_USE_LIBAO = true
 ifdef SAL_USE_LIBAO
 	W_OPTS += -DSAL_AUDIO_PUSH -DSAL_NO_SDL_SOUND
 	LIBS += -lao
 endif
 
-DEBUG_BUILD = true
+#DEBUG_BUILD = true
 ifdef DEBUG_BUILD
 	W_OPTS += -g
 	DO_STRIP = 

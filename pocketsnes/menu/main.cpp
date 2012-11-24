@@ -394,14 +394,14 @@ int RunSound()
 		{
 			aim=sal_AudioGetPrevBufferIndex();
 #ifndef SAL_AUDIO_PUSH
-			if (done < aim)
+			if (done!=aim)
 #endif /* SAL_AUDIO_PUSH */
 			{
 				doneLast=done;
 				done=sal_AudioGetNextBufferIndex(done);
 				if(mMenuOptions.frameSkip==0) //Auto
 				{
-					if(done>=aim) IPPU.RenderThisFrame=TRUE; // Render last frame
+					if(done==aim) IPPU.RenderThisFrame=TRUE; // Render last frame
 					else          IPPU.RenderThisFrame=FALSE; // lagged behind, so skip
 
 				}
@@ -429,7 +429,7 @@ int RunSound()
 				HandleQuickStateRequests();
 				
 			}
-			if (done>=aim) break; // Up to date now
+			if (done==aim) break; // Up to date now
 			if (mEnterMenu) break;
 		}
 		done=aim; // Make sure up to date

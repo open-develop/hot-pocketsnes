@@ -108,6 +108,10 @@ struct MENU_OPTIONS
   unsigned int optionsVersion;
   unsigned int frameSkip;
   unsigned int soundEnabled;
+#define POCKET_SOUND_EMULATED_ONLY 0
+#define POCKET_SOUND_ON           1
+#define POCKET_SOUND_NOT_EMULATED 2
+
   unsigned int transparency;
   unsigned int volume;
   unsigned int pad_config[32];

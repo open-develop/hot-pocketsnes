@@ -445,7 +445,11 @@ static
 int RunNoSound()
 {
   	int skip=0, done=0, doneLast=0,aim=0,i;
-	Settings.APUEnabled = 0;
+    
+	if(mMenuOptions.soundEnabled==POCKET_SOUND_EMULATED_ONLY)
+		Settings.APUEnabled = 1; /* Some roms hang without APU, e.g. Super Metroid won't start */
+	else
+		Settings.APUEnabled = 0;
 	Settings.NextAPUEnabled = Settings.APUEnabled;					
 	S9xSetSoundMute (TRUE);
 	sal_TimerInit(Memory.ROMFramesPerSecond);
@@ -730,7 +734,7 @@ int mainEntry(int argc, char* argv[])
 			sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
 			sal_CpuSpeedSet(mMenuOptions.cpuSpeed);	
 			sal_VideoClear(0);
-			if(mMenuOptions.soundEnabled) 	
+			if(mMenuOptions.soundEnabled==POCKET_SOUND_ON)
 				RunSound();
 			else	RunNoSound();
 

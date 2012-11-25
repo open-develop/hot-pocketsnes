@@ -1074,6 +1074,9 @@ void MainMenuUpdateText(s32 menu_index)
 			case 1:
 				strcpy(mMenuText[MENU_SOUND_ON],"Sound:                      ON");
 				break;
+			default:
+				strcpy(mMenuText[MENU_SOUND_ON],"Sound:            NO EMULATION");
+				break;
 			}
 			break;
 		
@@ -1319,7 +1322,17 @@ s32 MenuRun(s8 *romName)
 			switch(menufocus)
 			{
 				case MENU_SOUND_ON:
-					mMenuOptions->soundEnabled^=1;
+					#define MAX_SOUND_OPTIONS 2
+					if (keysRepeat&SAL_INPUT_RIGHT)
+					{
+						mMenuOptions->soundEnabled+=1;
+						if(mMenuOptions->soundEnabled>MAX_SOUND_OPTIONS) mMenuOptions->soundEnabled=0;
+					}
+					else
+					{
+						mMenuOptions->soundEnabled-=1;
+						if(mMenuOptions->soundEnabled>MAX_SOUND_OPTIONS) mMenuOptions->soundEnabled=MAX_SOUND_OPTIONS;
+					}
 					MainMenuUpdateText(MENU_SOUND_ON);
 					break;
 
@@ -1382,7 +1395,6 @@ s32 MenuRun(s8 *romName)
 					{
 						mMenuOptions->volume-=1;
 						if(mMenuOptions->volume>31) mMenuOptions->volume=31;
-
 					}
 					MainMenuUpdateText(MENU_SOUND_VOL);
 					break;

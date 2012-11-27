@@ -4,6 +4,8 @@ Installation
 Extract contents of the zip file and copy everything to the GAME
 folder on your DINGOO.
 
+That is, png files should be in a:\game\pocketsnes
+
 APP - Usage
 ----------
 Go to the Games menu option on your Dingoo
@@ -22,8 +24,10 @@ PocketSnes will now start and run your selected game
 
 Menu
 ----
+
 Return to Game
 Exits menu and returns to Snes emulation ( if a game was previously loaded )
+
 Select Rom
 Enters the rom browser interface
 Press UP or DOWN to change your selection	
@@ -31,12 +35,14 @@ You can page through the items using RIGHT or LEFT
 
 Save Default Directory
 Sets the current directory as the default directory for PocketSnes
+
 Main Menu
 Returns you to the main menu
 <..> 
 will take you up a directory
 
 Press A to select a ROM which will then be loaded 
+
 Save States
 Save States are basically dumps of the emulation state which
 can be reloaded at any point.  This effectively allows you 
@@ -44,8 +50,10 @@ to save you game at any point.
 
 The Save State management screen allows you to load,save or delete save states
 Save States are saved to the pocketsnes directory on your dingoo
+
 Reset Game
 Resets the current game if one is loaded
+
 Save SRAM
 Some Snes games allowed you to save your game to the special memory on the Snes cartridge.  
 This memory was called SRAM.  PocketSNES emulates this type of memory which means you can
@@ -53,40 +61,49 @@ play your Snes games exactly as you would on Snes.
 
 The save SRAM option allows you to save the contents of SRAM to disk
 so it can be loaded again later when you load the Snes Game. 
+
 Auto Save SRAM
 Press RIGHT or LEFT to change the option
 ON - Means that PocketSnes will save the contents of SRAM everytime you enter the menu.
 OFF - Means that PocketSnes will never automatically save SRAM to disk.  This means you
 have to use the Save SRAM menu option or your SRAM saves will be lost.
+
 Sound
-Turns sound on or off
+Turns sound on or off. Setting to "OFF" means no sound but sound is emulated.
+"NO EMULATION" means sound is not emulated (which can cause some games to hang).
+
 Volume
 Allows you to set the sound volume
+
 Sound Rate
 Allows you to set the sound rate of the emulated sound stream.  The lower the value
 the lower the quality.  The higher the value the better the quality but it has more
 impact on the performance of the emulator
+
 Frameskip
 Frameskip allows you to control how many times the emulated Snes screen is drawn
 per second.  
-AUTO - means that the system will monitor the emulator performance and skip
+    AUTO - means that the system will monitor the emulator performance and skip
 frames when it believes the emulator is running too slowly
-0    = 60 fps
+    0    = 60 fps
 The system will never skip a frame, this could cause some
 games to run very slowly
-1    = 30 fps
-2    = 20 fps
+    1    = 30 fps
+    2    = 20 fps
 and so on..
+
 Full Screen Mode
 Allows you set the screen to fill the entire Dingoo screen or render
 the screen at its current resolution which will mean having black borders
 around the emulated Snes screen.
+
 Transparency
 This is a hack which allows you to increase the performance of the emulator.
 Not all games use Transparency effects, so for those games you can disable
 transparency and the game will run faster.  
 NOTE: Enabling this option on games that do use transparency can cause
 the emulated Snes display to be drawn incorrectly.
+
 Show FPS
 FPS = Frames Per Second
 This is the number of times the emulated Snes screen has been updated over the
@@ -96,6 +113,7 @@ last second.  These stats give you can idea of how the emulator is performing
 30 FPS - ok
 20 FPS - bareable
 10 FPS - yuck! try lowering the sound rate or increasing the cpu speed
+
 CPU Speed
 This option allows you to configure the CPU speed on your Dingoo when
 running the Snes emulation.  The higher the value, the better the FPS
@@ -110,28 +128,35 @@ NOTE: Playing with the CPU speed will not cause permanent problems on
 your dingoo but it could cause the emulator to crash all over
 the place.  So just bare that in mind when trying to set the
 CPU speed too high or too low. 
+
 Load Global Settings
 This will reload the global default menu settings from disk
 Note: All settings are held in the pocketsnes directory
+
 Save Global Settings
 This will save the current menu settings to disk.  When PocketSnes
 next runs, these settings will be automatically loaded.
+
 Load Settings For Current Game
 This will reload the settings for the Snes game currently loaded
 Save Settings For Current Game
 This will save the current menu settings to disk.  PocketSnes will
 then reload these settings the next time this particular Snes game
 is loaded.
+
 Delete Settings For Current Game
 Deletes any saved settings for the currently Snes game.
+
 Credits
 Displays credit information for PocketSnes
+
 Exit Application
 Exits PocketSnes and returns you to the Dingoo menu.
 
 
 In Game - QuickSave/QuickLoad
 -----------------------------
+
 While running a Snes game you can save your current position to memory by pressing
 the following button combination
 

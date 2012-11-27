@@ -158,6 +158,12 @@ void sal_DirectoryGetParent(s8 *path)
 	s8 dirSepBad[2] = {SAL_DIR_SEP_BAD};
 	s32 len=(s32)strlen(path);
 
+	if (len==1)
+	{
+		path[0]=dirSep[0];
+		return;
+	}
+	
 	for(i=0;i<len;i++)
 	{
 		if ((path[i] == dirSep[0]) || (path[i] == dirSepBad[0]))

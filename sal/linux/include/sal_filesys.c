@@ -78,6 +78,12 @@ s32 sal_DirectoryRead(struct SAL_DIR *d, struct SAL_DIRECTORY_ENTRY *dir)
 			de=readdir(d->dir);
 			if(de)
 			{
+				/* Ignore "." */
+				if (!strcmp(de->d_name, "."))
+					de=readdir(d->dir);
+			}
+			if(de)
+			{
 				strcpy(dir->filename,de->d_name);
 				strcpy(dir->displayName,de->d_name);
 				if (de->d_type == 4)

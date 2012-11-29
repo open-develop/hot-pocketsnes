@@ -203,8 +203,17 @@ Change Log
 
 v2.2.2  unreleased
 
-    1) restore path for data back to a:\game\pocketsnes
-    2) working linux x86 support 
+r39 94f894f5159b
+
+ 1) restore path for data back to a:\game\pocketsnes
+ 2) working linux x86 support 
+ 3) Support for 50Hz PAL games. PAL games were running too fast (60 Hz
+    instead of 50 Hz). Based on code by Ayla/pcercuei
+ 4) Bug fix for  issue #2  - disabling/enabling sounds hangs emulation
+    Allow some game to run even with sound off, added a no APU emulation
+    option to menu.
+    New "no emulation" option is the old OFF, OFF now emulates APU but does
+    not mix sound.
 
 v2.2.1  2012-01-07
 gottaX implements:

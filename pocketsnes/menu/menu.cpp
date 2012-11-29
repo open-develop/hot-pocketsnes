@@ -40,6 +40,7 @@ static u16 mTempFb[SAL_SCREEN_WIDTH*SAL_SCREEN_HEIGHT];
 									
 void DefaultMenuOptions(void)
 {
+	/* TODO memfill zero */
 	mMenuOptions->frameSkip=0;   //auto
 	mMenuOptions->soundEnabled = 1; 
 	mMenuOptions->volume=25; 
@@ -47,6 +48,7 @@ void DefaultMenuOptions(void)
 	mMenuOptions->country=0;
 	mMenuOptions->showFps=1;
 	mMenuOptions->soundRate=44100;
+	mMenuOptions->quickkeys=1;
 #if defined(__DINGOO_APP__) || defined(__DINGOO_SIM__)
 	mMenuOptions->fullScreen=1;
 #else
@@ -1053,6 +1055,18 @@ void MainMenuUpdateText(s32 menu_index)
 			}
 			break;
 
+		case MENU_QUICKKEYS:
+			switch(mMenuOptions->quickkeys)
+			{
+			case 0:
+				strcpy(mMenuText[MENU_QUICKKEYS],"Quick keys:                 DISABLED");
+				break;
+			case 1:
+				strcpy(mMenuText[MENU_QUICKKEYS],"Quick keys:                 ENABLED");
+				break;
+			}
+			break;
+
 		case MENU_TRANSPARENCY:
 			switch(mMenuOptions->transparency)
 			{
@@ -1166,6 +1180,7 @@ void MainMenuUpdateTextAll(void)
 	MainMenuUpdateText(MENU_RESET_GAME);
 	MainMenuUpdateText(MENU_EXIT_APP);
 	MainMenuUpdateText(MENU_RETURN);
+	MainMenuUpdateText(MENU_QUICKKEYS);
 	MainMenuUpdateText(MENU_TRANSPARENCY);
 	MainMenuUpdateText(MENU_CPU_SPEED);
 	MainMenuUpdateText(MENU_SOUND_ON);
@@ -1334,6 +1349,11 @@ s32 MenuRun(s8 *romName)
 						if(mMenuOptions->soundEnabled>MAX_SOUND_OPTIONS) mMenuOptions->soundEnabled=MAX_SOUND_OPTIONS;
 					}
 					MainMenuUpdateText(MENU_SOUND_ON);
+					break;
+
+				case MENU_QUICKKEYS:
+					mMenuOptions->quickkeys^=1;
+					MainMenuUpdateText(MENU_QUICKKEYS);
 					break;
 
 				case MENU_TRANSPARENCY:

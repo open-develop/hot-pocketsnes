@@ -217,7 +217,8 @@ v2.2.2  unreleased
     New "no emulation" option is the old OFF, OFF now emulates APU but does
     not mix sound.
  2) Quick keys option add, allows quick save/load and quick volume change
-    to be disabled.
+    to be disabled. NOTE settings file format has changed, remove global
+    config settings and game specific settings.
 
 r39 94f894f5159b Native release
 

@@ -97,6 +97,9 @@ Allows you set the screen to fill the entire Dingoo screen or render
 the screen at its current resolution which will mean having black borders
 around the emulated Snes screen.
 
+Quick keys
+If enabled L+R and left/right performs quick save.
+
 Transparency
 This is a hack which allows you to increase the performance of the emulator.
 Not all games use Transparency effects, so for those games you can disable
@@ -157,29 +160,34 @@ Exits PocketSnes and returns you to the Dingoo menu.
 In Game - QuickSave/QuickLoad
 -----------------------------
 
+NOTE only if "Quick keys" menu item is enabled.
+
 While running a Snes game you can save your current position to memory by pressing
 the following button combination
 
-L + R + LEFT
+    L + R + LEFT
 
 To reload this position press
 
-L + R + RIGHT
+    L + R + RIGHT
 
 Messages will be displayed at the top of the screen to confirm when your state has
 been saved or loaded.
 
 In Game Volume Control
 ----------------------
+
+NOTE only if "Quick keys" menu item is enabled.
+
 You can change the sound volume in game by pressing the following button combinations
 
 The increase the volume press
 
-L + R + UP
+    L + R + UP
 
 To decrease the volume press
 
-L + R + DOWN
+    L + R + DOWN
 
 A message will be display at the top of the screen to inform you of the new
 volume setting.
@@ -214,6 +222,8 @@ r39 94f894f5159b
     option to menu.
     New "no emulation" option is the old OFF, OFF now emulates APU but does
     not mix sound.
+ 5) Quick keys option add, allows quick save/load and quick volume change
+    to be disabled.
 
 v2.2.1  2012-01-07
 gottaX implements:

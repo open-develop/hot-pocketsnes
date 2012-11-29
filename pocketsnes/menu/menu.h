@@ -33,6 +33,7 @@ enum  MENU_ENUM
 	MENU_SOUND_RATE,
 	MENU_FRAMESKIP,
 	MENU_FULLSCREEN,
+	MENU_QUICKKEYS,
 	MENU_TRANSPARENCY,
 	MENU_FPS,
 	MENU_CPU_SPEED,
@@ -112,6 +113,7 @@ struct MENU_OPTIONS
 #define POCKET_SOUND_ON           1
 #define POCKET_SOUND_NOT_EMULATED 2
 
+  unsigned int quickkeys;
   unsigned int transparency;
   unsigned int volume;
   unsigned int pad_config[32];

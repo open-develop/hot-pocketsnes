@@ -226,53 +226,55 @@ uint32 S9xReadJoypad (int which1)
 		return val;
 	}
 
-	
-	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_LEFT))
+	if(mMenuOptions.quickkeys)
 	{
-		if (mQuickStateTimer==0)
+		if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_LEFT))
 		{
-			mSaveRequested=1;
-			strcpy(mQuickStateDisplay,"Saved!");
+			if (mQuickStateTimer==0)
+			{
+				mSaveRequested=1;
+				strcpy(mQuickStateDisplay,"Saved!");
+			}
+			return val;
 		}
-		return val;
-	}
 
-	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_RIGHT))
-	{
-		if (mQuickStateTimer==0)
+		if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_RIGHT))
 		{
-			mLoadRequested=1;
-			strcpy(mQuickStateDisplay,"Loaded!");
+			if (mQuickStateTimer==0)
+			{
+				mLoadRequested=1;
+				strcpy(mQuickStateDisplay,"Loaded!");
+			}
+			return val;
 		}
-		return val;
-	}
 
-	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_UP))
-	{
-		if(mVolumeTimer==0)
+		if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_UP))
 		{
-			mMenuOptions.volume++;
-			if(mMenuOptions.volume>31) mMenuOptions.volume=31;
-			sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
-			mVolumeTimer=5;
-			mVolumeDisplayTimer=60;
-			sprintf(mVolumeDisplay,"Vol: %d",mMenuOptions.volume);
+			if(mVolumeTimer==0)
+			{
+				mMenuOptions.volume++;
+				if(mMenuOptions.volume>31) mMenuOptions.volume=31;
+				sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
+				mVolumeTimer=5;
+				mVolumeDisplayTimer=60;
+				sprintf(mVolumeDisplay,"Vol: %d",mMenuOptions.volume);
+			}
+			return val;
 		}
-		return val;
-	}
 
-	if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_DOWN))
-	{
-		if(mVolumeTimer==0)
+		if ((joy & SAL_INPUT_L)&&(joy & SAL_INPUT_R)&&(joy & SAL_INPUT_DOWN))
 		{
-			mMenuOptions.volume--;
-			if(mMenuOptions.volume>31) mMenuOptions.volume=0;
-			sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
-			mVolumeTimer=5;
-			mVolumeDisplayTimer=60;
-			sprintf(mVolumeDisplay,"Vol: %d",mMenuOptions.volume);
+			if(mVolumeTimer==0)
+			{
+				mMenuOptions.volume--;
+				if(mMenuOptions.volume>31) mMenuOptions.volume=0;
+				sal_AudioSetVolume(mMenuOptions.volume,mMenuOptions.volume);
+				mVolumeTimer=5;
+				mVolumeDisplayTimer=60;
+				sprintf(mVolumeDisplay,"Vol: %d",mMenuOptions.volume);
+			}
+			return val;
 		}
-		return val;
 	}
 
 	if (joy & SAL_INPUT_Y) val |= SNES_Y_MASK;

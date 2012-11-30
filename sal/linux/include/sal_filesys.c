@@ -1,8 +1,40 @@
+/*
+** Linux filesys for SAL.
+**  posix file system
+*/
 
 #include <string.h>
 #include <error.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "sal.h"
+
+#ifndef SAL_NO_FILE_TIME_STAMP_SUPPORT
+/* if there is no hardware clock - do not define SAL_FILE_TIME_STAMP_SUPPORT */
+void sal_FileGetModTime(char * filename, char date_str[])
+{
+	struct stat aStat;
+	struct tm *my_date = NULL;
+
+	/*
+	** Get file time stamp
+	** stat() and then use st_mtime to convert to ISO format local date/time
+	** if stat() fails, make string empty
+	*/
+	if (! stat(filename, &aStat))
+	{
+		my_date = localtime(&aStat.st_mtime);
+		sprintf(date_str, "%04d-%02d-%02d %02d:%02d:%02d",
+			1900 + my_date->tm_year,
+			my_date->tm_mon + 1, my_date->tm_mday, 
+			my_date->tm_hour, my_date->tm_min, my_date->tm_sec);
+	}
+	else
+	{
+		date_str[0]='\0';
+	}
+}
+#endif /* SAL_NO_FILE_TIME_STAMP_SUPPORT */
 
 s32 sal_DirectoryGetCurrent(s8 *path, u32 size)
 {

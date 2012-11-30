@@ -1,4 +1,3 @@
-
 #include "sal.h"
 #include "menu.h"
 #include "snapshot.h"
@@ -699,7 +698,9 @@ static s32 SaveStateSelect(s32 mode)
 	s32 saveno=0;
 	u32 keysRepeat=0,keysHeld=0;
 	u16 *pixTo,*pixFrom;
+	char date_str[19+1];
 
+	date_str[0]='\0';
 	if(mRomName[0]==0)
 	{
 		// no rom loaded
@@ -773,6 +774,10 @@ static s32 SaveStateSelect(s32 mode)
 				if(mode==1) sal_VideoPrint((320-(strlen(MENU_TEXT_LOAD_SAVESTATE)<<3))>>1,210,MENU_TEXT_LOAD_SAVESTATE,SAL_RGB(31,31,31));
 				else if(mode==0) sal_VideoPrint((320-(strlen(MENU_TEXT_OVERWRITE_SAVESTATE)<<3))>>1,210,MENU_TEXT_OVERWRITE_SAVESTATE,SAL_RGB(31,31,31));
 				else if(mode==2) sal_VideoPrint((320-(strlen(MENU_TEXT_DELETE_SAVESTATE)<<3))>>1,210,MENU_TEXT_DELETE_SAVESTATE,SAL_RGB(31,31,31));
+				if(mSaveState[saveno].inUse)
+				{
+					sal_VideoPrint((320-(strlen(date_str)<<3))>>1,75,date_str,SAL_RGB(31,31,31));
+				}
 				break;
 			case 6:
 				sal_VideoPrint(124,145,"Saving...",SAL_RGB(31,31,31));
@@ -817,9 +822,15 @@ static s32 SaveStateSelect(s32 mode)
 				}
 				break;
 			case 3:
+				/* Load save state so we can show screen preview */
 				LoadStateFile(mSaveState[saveno].fullFilename);
+#ifndef SAL_NO_FILE_TIME_STAMP_SUPPORT
+				sal_FileGetModTime(mSaveState[saveno].fullFilename, date_str);
+#endif /* SAL_NO_FILE_TIME_STAMP_SUPPORT */
+				/* TODO enable APU, ensure no hang? */
 				Settings.APUEnabled = 0;
 				Settings.NextAPUEnabled = Settings.APUEnabled;					
+				/* TODO set transparency on before render to ensure correct display? */
 				S9xSetSoundMute (TRUE);
 				GFX.Screen = (uint8 *) &mTempFb[0];
 				IPPU.RenderThisFrame=TRUE;

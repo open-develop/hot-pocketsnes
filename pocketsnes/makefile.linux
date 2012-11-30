@@ -24,6 +24,7 @@ INCLUDE   = -I$(TOOLCHAIN)/include \
 		-I ./menu -I ./linux -I ./snes9x -I ./snes9x_include -I$ 
 
 W_OPTS    = -O2 $(shell sdl-config --cflags) -D__LINUX__
+# NOTE A320 build may want to define  -DSAL_NO_FILE_TIME_STAMP_SUPPORT
 LIBS      = `sdl-config --libs` -lpthread -lz -lpng -lm -lgcc -lstdc++
 
 #if SAL_USE_LIBAO is not set, use SDL Audio

@@ -20,7 +20,7 @@ INCLUDE   = -I$(DINGOO_SDK)/include \
 		-I ../sal/common -I ../sal/common/includes \
 		-I ./menu -I ./snes9x -I ./dingoo -I ./snes9x_include -I$ 
 
-W_OPTS    = -Wall -Wextra -finline-functions -fomit-frame-pointer -msoft-float -fno-builtin -fno-exceptions -D__DINGOO__ -D__DINGOO_APP__
+W_OPTS    = -Wall -Wextra -finline-functions -fomit-frame-pointer -msoft-float -fno-builtin -fno-exceptions -D__DINGOO__ -DSAL_NO_FILE_TIME_STAMP_SUPPORT -D__DINGOO_APP__
 CPP_OPTS  = -G0 -O3 $(INCLUDE) -mips32 -mno-abicalls -fno-pic $(W_OPTS) -D_DEBUG -DMPU_JZ4740 -c
 CC_OPTS   = -G0 -O3 $(INCLUDE) -mips32 -mno-abicalls -fno-pic $(W_OPTS) -D_DEBUG -DMPU_JZ4740 -c
 CC_OPTS_A = $(CC_OPTS) -D_ASSEMBLER_

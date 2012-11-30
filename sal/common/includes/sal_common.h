@@ -84,6 +84,9 @@ u32 sal_FileGetCRC(u8 *data, u32 size);
 
 void sal_DirectorySplitFilename(s8 *wholeFilename, s8* path, s8 *filename, s8 *ext);
 void sal_DirectoryGetParent(s8 *path);
+#ifndef SAL_NO_FILE_TIME_STAMP_SUPPORT
+void sal_FileGetModTime(char * filename, char date_str[]);
+#endif /* SAL_NO_FILE_TIME_STAMP_SUPPORT */
 s32 sal_DirectoryGetCurrent(s8 *path, u32 size);
 void sal_DirectoryCombine(s8 *path, s8 *name);
 s32 sal_DirectoryGetItemCount(s8 *path, s32 *returnItemCount);

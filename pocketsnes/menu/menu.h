@@ -109,11 +109,6 @@ struct MENU_OPTIONS
   unsigned int optionsVersion;
   unsigned int frameSkip;
   unsigned int soundEnabled;
-#define POCKET_SOUND_EMULATED_ONLY 0
-#define POCKET_SOUND_ON           1
-#define POCKET_SOUND_NOT_EMULATED 2
-
-  unsigned int quickkeys;
   unsigned int transparency;
   unsigned int volume;
   unsigned int pad_config[32];
@@ -124,6 +119,11 @@ struct MENU_OPTIONS
   unsigned int autoSaveSram;
   unsigned int cpuSpeed;
   unsigned int soundRate;
+#define POCKET_SOUND_EMULATED_ONLY 0
+#define POCKET_SOUND_ON           1
+#define POCKET_SOUND_NOT_EMULATED 2
+
+  unsigned int quickkeys;
   unsigned int spare01;
   unsigned int spare02;
   unsigned int spare03;
@@ -132,7 +132,6 @@ struct MENU_OPTIONS
   unsigned int spare06;
   unsigned int spare07;
   unsigned int spare08;
-  unsigned int spare09;
 
 };
 

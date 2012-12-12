@@ -526,6 +526,7 @@ int SnesInit()
 {
 	ZeroMemory (&Settings, sizeof (Settings));
 
+	Settings.DisplayFrameRate = 0;  /* do not use snes9x FPS display */
 	Settings.JoystickEnabled = FALSE;
 	Settings.SoundPlaybackRate = mMenuOptions.soundRate;
 	Settings.Stereo = TRUE;
